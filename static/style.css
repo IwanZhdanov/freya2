@@ -1,0 +1,98 @@
+html, body {
+	padding: 0px;
+	margin: 0px;
+	text-align: justify;
+}
+a {
+	color: blue;
+}
+a:hover {
+	color: #77f;
+}
+
+.row {
+	width: 100%;
+	padding: 0px 30px;
+	padding-bottom: 5px;
+	box-sizing: border-box;
+	display: flex;
+	flex-wrap: wrap;
+	/*justify-content: space-between;*/
+}
+.row div {
+	flex-grow: 1;
+	box-sizing: border-box;
+}
+.row .col-1 { padding: 0px 10px; width: 8%; max-width: 8%; }
+.row .col-2 { padding: 0px 10px; width: 17%; max-width: 17%; }
+.row .col-3 { padding: 0px 10px; width: 25%; max-width: 25%; }
+.row .col-4 { padding: 0px 10px; width: 33%; max-width: 33%; }
+.row .col-5 { padding: 0px 10px; width: 42%; max-width: 42%; }
+.row .col-6 { padding: 0px 10px; width: 50%; max-width: 50%; }
+.row .col-7 { padding: 0px 10px; width: 58%; max-width: 58%; }
+.row .col-8 { padding: 0px 10px; width: 67%; max-width: 67%; }
+.row .col-9 { padding: 0px 10px; width: 75%; max-width: 75%; }
+.row .col-10 { padding: 0px 10px; width: 83%; max-width: 83%; }
+.row .col-11 { padding: 0px 10px; width: 92%; max-width: 92%; }
+.row .col-12 { padding: 0px 10px; width: 100%; max-width: 100%; }
+.text-center {
+	text-align: center;
+}
+
+
+form {
+	margin-bottom: 15px;
+}
+form input {
+	width: 100%;
+	background: white;
+	border: #aaf 1px solid;
+}
+form input[type=checkbox] {
+	width: initial;
+}
+form select {
+	background: white;
+	border: #aaf 1px solid;
+}
+form textarea {
+	width: 100%;
+	height: 150px;
+	background: white;
+	border: #aaf 1px solid;
+}
+
+div.spoiler {
+	margin-bottom: 10px;
+}
+li.current > a {
+	color: #777;
+}
+button {
+	background: white;
+	border: #aaf 1px solid;
+}
+
+
+.left_list ul {
+	display: none;
+}
+.left_list ul.open {
+	display: block;
+}
+.left_list > ul {
+	display: block;
+}
+ul.pagination {
+	display: flex;
+	list-style: none;
+	padding: 0px;
+	margin: 0px;
+}
+ul.pagination li {
+	margin: 0px 5px;
+}
+
+.tab-wiki {
+	overflow: auto;
+}

@@ -1,0 +1,27 @@
+div.left_list ul {
+	margin-left: 10px;
+	padding-left: 0px;
+}
+.hdr {
+	display: flex;
+	margin-bottom: 10px;
+}
+.hdr div {
+	flex-grow: 1;
+	text-align: center;
+	padding: 5px;
+	background-color: #ddd;
+	cursor: pointer;
+}
+div.tab_hdr:hover {
+	background-color: #eee;
+}
+div.tab_hdr.active {
+	background-color: #aaf;
+}
+div.tab_dat {
+	display: none;
+}
+div.tab_dat.active {
+	display: block;
+}
