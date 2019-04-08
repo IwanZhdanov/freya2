@@ -285,7 +285,7 @@
 			if ($p['spoiler']) $form['spoiler'] = $p['spoiler'];
 			echo makeForm ($form);
 		}
-		doMail ($vars, $ret=='done');
+		doMail ($p['dat'], $vars, $ret=='done');
 		return $ret;
 	}
 	

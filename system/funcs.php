@@ -1,10 +1,14 @@
 <?php
 	$mailList = [];
 	
-	function doMail ($vars, $send) {
+	function doMail ($p, $vars, $send) {
 		global $con, $data, $mailList;
 		$pr = $data['mysql']['pref'].'_';
 		if ($send) {
+			foreach ($p as $vr => $vl) if (mb_strpos ($vr, '_q') === false) {
+				$row = $con->query("select * from {$pr}columns where id='{$vr}';")->fetch();
+				if ($row) $vars[$row['vrname']] = $vl;
+			}
 			foreach ($mailList as $element => $tmp) if ($tmp) {
 				$inf = [
 					'email'=>'',
@@ -19,11 +23,12 @@
 				$inf['email'] = str_replace (',', ' ', $inf['email']);
 				$inf['email'] = str_replace (';', ' ', $inf['email']);
 				$emails = explode (' ', $inf['email']);
+				$inf['body'] = iconv ('UTF-8', 'KOI8R', $inf['body']);
+				echo $inf['body']; die(); ////
 				foreach ($emails as $vr=>$vl) if ($vl) {
 					mail ($vl, $inf['subject'], $inf['body']);
 				}
 			}
-			mail ('iwanzhdanov2007@gmail.com', 'test', 'TEST');
 		}
 		$mailList = [];
 	}
