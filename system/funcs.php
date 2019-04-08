@@ -24,7 +24,6 @@
 				$inf['email'] = str_replace (';', ' ', $inf['email']);
 				$emails = explode (' ', $inf['email']);
 				$inf['body'] = iconv ('UTF-8', 'KOI8R', $inf['body']);
-				echo $inf['body']; die(); ////
 				foreach ($emails as $vr=>$vl) if ($vl) {
 					mail ($vl, $inf['subject'], $inf['body']);
 				}
