@@ -223,7 +223,7 @@
 		return $ret;
 	}
 	
-	function sysAddOneToStruct ($p, $mode='') {
+	function sysAddOneToStruct ($p, $mode='', &$vars) {
 		global $session, $user, $input, $err, $con, $data;
 		if (!grantedForMe ($p['id'], INSERT_TO_TABLE)) return;
 		if (!$mode) {
@@ -285,6 +285,7 @@
 			if ($p['spoiler']) $form['spoiler'] = $p['spoiler'];
 			echo makeForm ($form);
 		}
+		doMail ($vars, $ret=='done');
 		return $ret;
 	}
 	
@@ -642,7 +643,7 @@
 					['Тип','typ','select', 'opts'=>$types],
 					['Формат','format','text'],
 					['По умолчнию','def','text'],
-					['Хранить пустое','keep','select', 'opts'=>[0=>'Нет','1'=>'Да']],
+					['Хранить пустое','keep','select', 1, 'opts'=>[0=>'Нет','1'=>'Да']],
 				],
 				'submit'=>'?act=struct_edit_fields',
 				'spoiler'=>'Добавить новое поле',

@@ -1,4 +1,33 @@
 <?php
+	$mailList = [];
+	
+	function doMail ($vars, $send) {
+		global $con, $data, $mailList;
+		$pr = $data['mysql']['pref'].'_';
+		if ($send) {
+			foreach ($mailList as $element => $tmp) if ($tmp) {
+				$inf = [
+					'email'=>'',
+					'subject'=>'Заголовок сообщения',
+					'body'=>'Текст письма не заполнен',
+				];
+				$res=$con->query("select vrname, value from {$pr}columns c, {$pr}data d where d.var = c.id and d.elem = '$element';");
+				while ($row=$res->fetch()) $inf[$row['vrname']] = $row['value'];
+				foreach ($inf as $vr => $vl) {
+					$inf[$vr] = applyCode ($vl, $vars);
+				}
+				$inf['email'] = str_replace (',', ' ', $inf['email']);
+				$inf['email'] = str_replace (';', ' ', $inf['email']);
+				$emails = explode (' ', $inf['email']);
+				foreach ($emails as $vr=>$vl) if ($vl) {
+					mail ($vl, $inf['subject'], $inf['body']);
+				}
+			}
+			mail ('iwanzhdanov2007@gmail.com', 'test', 'TEST');
+		}
+		$mailList = [];
+	}
+
 	function needAuth () {
 		global $session;
 		if (!$session['user']) {
@@ -198,7 +227,7 @@
 	}
 		
 	function applyCode ($html, &$vars) {
-		global $con, $data, $input, $direct;
+		global $con, $data, $input, $direct, $mailList;
 		$pr = $data['mysql']['pref'].'_';
 $debug = false;
 		$html .= '{{}}';
@@ -401,6 +430,11 @@ $debug = false;
 												$ret .= makeLink ($_GET, $arr, ['p'=>0]);
 											}
 											break;
+										case 'sendEmail':
+											$hid = getVars ($vars, $v[0]);
+											$ml = $con->query("select * from {$pr}struct where hid='$hid';")->fetch();
+											if ($ml) $mailList[$ml['id']] = true;
+											break;
 										case 'formAdd':
 											$elem = $con->query("select * from {$pr}struct where hid='{$v[0]}';")->fetch();
 											if ($elem) {
@@ -410,7 +444,7 @@ $debug = false;
 												$spoiler = '';
 												if (isset ($v[1])) $spoiler = getVars ($vars, $v[1]);
 												$p['spoiler'] = $spoiler;
-												if (sysAddOneToStruct ($p) == 'done') $direct = $_SERVER['HTTP_REFERER'];
+												if (sysAddOneToStruct ($p, '', $vars) == 'done') $direct = $_SERVER['HTTP_REFERER'];
 												$ret .= ob_get_clean();
 											}
 											break;
