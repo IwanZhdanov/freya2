@@ -17,9 +17,9 @@
 						header($_SERVER['SERVER_PROTOCOL'] . ' 304 Not Modified');
 						exit;
 					}
-					header('Last-Modified: '. $LastModified);
+					header ("Content-type: text/html");
+					header ('Last-Modified: '. $LastModified);
 
-echo 'Last-Modified: '. $LastModified."\n";
 					$html = file_get_contents ($cache_filename);
 					echo $html;
 					die();
