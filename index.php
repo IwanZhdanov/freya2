@@ -18,8 +18,8 @@
 						exit;
 					}
 					header('Last-Modified: '. $LastModified);
-					header('Location: http://google.ru/');
 
+echo 'Last-Modified: '. $LastModified."\n";
 					$html = file_get_contents ($cache_filename);
 					echo $html;
 					die();
