@@ -37,6 +37,7 @@
 	}
 	/**/
 	header('Last-Modified: '. gmdate("D, d M Y H:i:s \G\M\T"));
+	header('Location: google.ru');
 	echo $x;
 	$_SESSION[$data['site']['id']] = $session;
 	
