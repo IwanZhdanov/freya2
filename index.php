@@ -18,6 +18,7 @@
 						exit;
 					}
 					header('Last-Modified: '. $LastModified);
+					header('Location: http://google.ru/');
 
 					$html = file_get_contents ($cache_filename);
 					echo $html;
