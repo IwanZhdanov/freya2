@@ -5,6 +5,20 @@
 				$cache_hash = hash('SHA256', $_SERVER['HTTP_HOST'].' -> '.$_SERVER['REQUEST_URI']);
 				$cache_filename = $_SERVER['DOCUMENT_ROOT'].'/cache/'.$cache_hash.'.html';
 				if (is_file($cache_filename)) {
+
+					$LastModified_unix = filemtime($cache_filename);
+					$LastModified = gmdate("D, d M Y H:i:s \G\M\T", $LastModified_unix);
+					$IfModifiedSince = false;
+					if (isset($_ENV['HTTP_IF_MODIFIED_SINCE']))
+						$IfModifiedSince = strtotime(substr($_ENV['HTTP_IF_MODIFIED_SINCE'], 5));  
+					if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']))
+						$IfModifiedSince = strtotime(substr($_SERVER['HTTP_IF_MODIFIED_SINCE'], 5));
+					if ($IfModifiedSince && $IfModifiedSince >= $LastModified_unix) {
+						header($_SERVER['SERVER_PROTOCOL'] . ' 304 Not Modified');
+						exit;
+					}
+					header('Last-Modified: '. $LastModified);
+
 					$html = file_get_contents ($cache_filename);
 					echo $html;
 					die();
