@@ -413,7 +413,15 @@
 			$fields = [];
 			$res = $con->query ("select * from {$pr}columns where groupid='{$p['id']}' order by sort;");
 			while ($row = $res->fetch()) {
-				if (!$row['def']) $fields[] = [$row['caption'], 'dat['.$row['id'].']', $row['typ'], 'format'=>$row['format']];
+				if (!$row['def']) {
+					if ($row['typ'] == 'select') {
+						$opts = '';
+						$optA = $con->query("select * from {$pr}struct where parent in (select id from {$pr}struct where hid='{$row['typ2']}');");
+						while ($optB = $optA->fetch()) $opts[$optB['hid']] = $optB['caption'];
+						$fields[] = [$row['caption'], 'dat['.$row['id'].']', $row['typ'], 'format'=>$row['format'], 'opts'=>$opts];
+					} else
+					 $fields[] = [$row['caption'], 'dat['.$row['id'].']', $row['typ'], 'format'=>$row['format']];
+				}
 			}
 			$form = [
 				'caption'=>'',
@@ -503,7 +511,7 @@
 						while (true) {
 							$need = $con->query("select * from {$pr}columns where groupid='{$p['move_to']}' and caption='{$var['caption']}' and typ='{$var['typ']}';")->fetch();
 							if ($need) break;
-							$con->exec ("insert into {$pr}columns (groupid, caption, typ) values ('{$p['move_to']}', '{$var['caption']}', '{$var['typ']}');");
+							$con->exec ("insert into {$pr}columns (groupid, caption, typ, typ2) values ('{$p['move_to']}', '{$var['caption']}', '{$var['typ']}', '{$var['typ2']}');");
 						}
 						$con->exec("update {$pr}data set var='{$need['id']}' where id='{$row['id']}';");
 					}
@@ -577,7 +585,7 @@
 				if (!$row) $err .= 'Неверно указан идентификатор элемента<br />';
 			}
 			if (!$err) {
-				$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ) values ('{$row['parent']}', '{$p['caption']}', '{$p['vrname']}', '{$p['typ']}');");
+				$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ, typ2) values ('{$row['parent']}', '{$p['caption']}', '{$p['vrname']}', '{$p['typ']}', '{$p['typ2']}');");
 				$vrId = normal ($pr.'columns');
 				if ($p['value']) {
 					if ($p['caption'] == 'HTML' && $_POST['value']) $value = $_POST['value']; else $value = $p['value'];
@@ -607,6 +615,7 @@
 					['Название поля','caption','text'],
 					['Имя переменной','vrname','text'],
 					['Тип','typ','select','opts'=>$types],
+					['Выбор из','typ2','text','if'=>'typ.value=="select"'],
 					['Значение','value','area','if'=>'typ.value!="file"'],
 				],
 				'submit'=>'?act=struct_add_var',
@@ -676,6 +685,12 @@
 			while ($row = $res->fetch()) {
 				$dat = $con->query("select * from {$pr}data where elem='{$p['id']}' and var='{$row['id']}';")->fetch();
 				$value = $dat ? $dat['value'] : '';
+				if ($row['typ'] == 'select') {
+					$opts = [];
+					$optA = $con->query("select * from {$pr}struct where parent in (select id from {$pr}struct where hid='{$row['typ2']}');");
+					while ($optB = $optA->fetch()) $opts[$optB['hid']] = $optB['caption'];
+					$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value, 'opts'=>$opts];
+				} else
 				$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value];
 			}
 			if (count ($form['fields'])) echo makeForm ($form);
@@ -764,6 +779,7 @@
 						['Название поля','caption','text'],
 						['Имя переменной','vrname','text'],
 						['Тип','typ','select', 'opts'=>$types],
+						['Выбор из','typ2','text'],
 						['Формат','format','text'],
 						['По умолчанию','def','text'],
 						['Сортировать','move','select','opts'=>$move],
@@ -781,6 +797,7 @@
 					['Название поля','caption','text'],
 					['Имя переменной','vrname','text'],
 					['Тип','typ','select', 'opts'=>$types],
+					['Выбор из','typ2','text'],
 					['Формат','format','text'],
 					['По умолчнию','def','text'],
 					['Хранить пустое','keep','select', 1, 'opts'=>[0=>'Нет','1'=>'Да']],
