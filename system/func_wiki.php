@@ -46,6 +46,7 @@
 			if (mb_substr($str, mb_strlen($str)-1,1) == '|') $str = mb_substr($str, 0, mb_strlen($str)-1);
 			$str .= ' ';
 			$oneline = (mb_strpos($str, '<') !== false);
+			$str = preg_replace ('/\[\[([^\]\|]*?)\|([^\]]*?)\]\]/ui','<a href="$1">$2</a>',$str);
 			$q = mb_strlen ($str);
 			$canTab = mb_substr($str, 0, 1) == '|';
 			for ($b=0;$b<$q;$b++) {
