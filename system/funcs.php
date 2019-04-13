@@ -494,7 +494,6 @@ $debug = false;
 				inCacheAdd ($elem['id']);
 			}
 		}
-//die();////
 		return $ret;
 	}
 	

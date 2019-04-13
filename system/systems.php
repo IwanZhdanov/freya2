@@ -141,6 +141,146 @@
 		return $ret;
 	}
 	
+	function sysChPass ($p, $mode='') {
+		global $con, $err, $data, $input, $user;
+		if (!$user['id']) return;
+		if (!$mode) {
+			$mode = 'form';
+			if (isset ($p['act']) && $p['act'] == 'chpass') $mode = 'do';
+		}
+		$pr = $data['mysql']['pref'].'_';
+		$ret = 'form';
+		if ($mode == 'do') {
+			$ret = 'err';
+			if (!$err) {
+				if ($p['pass1'] != $p['pass2']) $err.='Введённые пароли не совпадают<br />';
+				 else if (strlen ($p['pass1']) < 3) $err.= 'Пароль не короче 3х символов<br />';
+			}
+			if (!$err) {
+				$row = $con->query("select * from {$pr}users where id='{$user['id']}';")->fetch();
+				if (!checkPassw($p['pass'], $row['pass'], $row['salt'])) $err.='Текущий пароль указан неверно<br />';
+			}
+			if (!$err) {
+				setPassw ($p['pass1'], $pass, $salt);
+				$con->exec ("update {$pr}users set pass = '$pass', salt = '$salt' where id='{$user['id']}';");
+				$ret = 'done';
+			}
+			$mode = 'form';
+		}
+		if ($mode == 'form' && !isset($p['act'])) {
+			$form = [
+				'caption'=>'Сменить пароль',
+				'defaults'=>$p,
+				'fields'=>[
+					['Логин','','info',$user['login']],
+					['Текущий пароль','pass','pass'],
+					['Новый пароль','pass1','pass'],
+					['Повторите пароль','pass2','pass'],
+				],
+				'submit'=>'?act=chpass',
+				'cancel'=>'?',
+			];
+			echo makeForm ($form);
+		}
+		return $ret;
+	}
+	
+	function sysPassRestore ($p, $mode='') {
+		global $con, $err, $data, $input, $user, $mailList;
+		if (!$mode) {
+			$mode = 'form';
+			if (isset ($p['act']) && $p['act'] == 'restorePass') $mode = 'do';
+		}
+		$pr = $data['mysql']['pref'].'_';
+		$ret = 'form';
+		if ($mode == 'do') {
+			$ret = 'err';
+			$restore = false;
+			if (isset ($p['code']) && strlen($p['code']) == 32) {
+				$restore = $con->query("select * from {$pr}users where restore like concat('%',{$p['code_q']},'%');")->fetch();
+				if ($restore) {
+					$rst = explode ('_', $restore['restore']);
+					if ($rst[0] < time()) {
+						$con->exec ("update {$pr}users set restore = '' where id='{$restore['id']}';");
+						$restore = false;
+					}
+				}
+			}
+			if (!$restore) {
+				if (!$err) {
+					$lines = $con->query("select * from {$pr}users where email = '{$p['email']}';");
+					if (!$lines->rowCount()) $err.='Указанный e-mail не найден<br>';
+				}
+				if (!$err) {
+					while ($line = $lines->fetch()) {
+						$cd = unic('0123456789ABCDEF', 32);
+						$code = (time()+86400) . '_' . $cd;
+						$link = 'http://'.$_SERVER['HTTP_HOST'].'/user/restore.php?code='.$cd;
+						$con->exec("update {$pr}users set restore='{$code}' where id='{$line['id']}';");
+						$mailList = [];
+						$mails = $con->query("select * from {$pr}struct where alias='restore';")->fetch();
+						if ($mails) {
+							$mailList[$mails['id']] = true;
+							addVars ($vars, 'email', $input['email']);
+							addVars ($vars, 'code', $cd);
+							addVars ($vars, 'url', $link);
+							doMail ([], $vars, true);
+						} else {
+							mail ($input['email'], 'Восстановление пароля',$link);
+						}
+					}
+					$ret = 'done';
+				}
+			} else {
+				$direct = '/user/restore.php?code='.$rst[1];
+				if (!$err) {
+					if ($p['pass1'] != $p['pass2']) $err.='Введённые пароли не совпадают<br />';
+					 else if (mb_strlen ($p['pass1']) < 3) $err.='Пароль не короче 3х сиволов<br />';
+				}
+				if (!$err) {
+					setPassw ($p['pass1'], $pass, $salt);
+					$con->exec("update {$pr}users set pass='$pass', salt='$salt', restore='' where id='{$restore['id']}';");
+					$direct = '/user/';
+					$ret = 'done';
+				}
+			}
+			$mode = 'form';
+		}
+		if ($mode == 'form' && !isset($p['act'])) {
+			$restore = false;
+			if (isset ($p['code']) && strlen($p['code']) == 32) {
+				$restore = $con->query("select * from {$pr}users where restore like concat('%',{$p['code_q']},'%');")->fetch();
+			}
+			if (!$restore) {
+				$form = [
+					'caption'=>'Восстановить пароль',
+					'defaults'=>$p,
+					'fields'=>[
+						['Ваш e-mail','email','text'],
+						['Код восстановления (если есть)','code','text'],
+					],
+					'submit'=>'?act=restorePass',
+					'cancel'=>'?',
+				];
+			} else {
+				$form = [
+					'caption'=>'Установить новый пароль',
+					'hidden'=>[
+						'code'=>$p['code'],
+					],
+					'fields'=>[
+						['Логин','','info',$restore['login']],
+						['Новый пароль','pass1','pass'],
+						['Повторите','pass2','pass'],
+					],
+					'submit'=>'?act=restorePass',
+				];
+			}
+			echo makeForm ($form);
+		}
+		return $ret;
+	}
+	
 	function sysGetStruct ($from=0, $id=-1, $lvls=-1, $open=[]) {
 		global $con, $data;
 //		if ($id >=0 && !grantedForMe ($id, VIEW_TABLE)) return;
