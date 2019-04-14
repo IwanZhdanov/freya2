@@ -9,13 +9,14 @@
 
 
 	function getGrantsForMe ($id) {
+		if (!$id) $id = 0;
 		global $rights, $user, $con, $data;
 		$prefix = $data['mysql']['pref'].'_';
 		$list = $id;
 		$ptr = intval ($id);
 		while ($ptr > 0) {
 			$ptr = $con->query("select * from {$prefix}struct where id='$ptr';")->fetch()['parent'];
-			$list = $ptr . ', ' . $list;
+			$list = intval($ptr) . ', ' . $list;
 		}
 		$groups = '0';
 		if ($user) {
@@ -277,6 +278,180 @@
 				];
 			}
 			echo makeForm ($form);
+		}
+		return $ret;
+	}
+	
+	function sysShowStructGrants ($p, $mode='') {
+		global $session, $user, $input, $err, $con, $data;
+		if (!grantedForMe ($p['id'], CHANGE_GRANTS)) return;
+		if (!$mode) {
+			$mode = 'form';
+			if (isset ($p['act']) && $p['act'] == 'struct_show_grants') $mode = 'do';
+		}
+		$pr = $data['mysql']['pref'].'_';
+		$ret = 'form';
+		if ($mode == 'do') {
+			$ret = 'err';
+			if (!$err) {
+				$ret = 'done';
+			}
+			$mode = 'form';
+		}
+		if ($mode == 'form' && !isset($p['act'])) {
+			$grnt = [
+				1=>'Полный доступ',
+				2=>'Просмотр страницы',
+				4=>'Просмотр данных',
+				8=>'Добавление субэлементов',
+				16=>'Редактирование уще существующих субэлементов',
+				32=>'Удаление субэлементов',
+				64=>'Редактирование полей элемента',
+				128=>'Выдача прав',
+			];
+			echo '<div class="tab-wiki"><table class="wiki">';
+			echo '<tr><th>№</th><th>Элемент</th><th>Кому</th><th>Права</th></tr>';
+			$ptr = $p['id'];
+			$N = 0;
+			while (true) {
+				$row = $con->query("select * from {$pr}struct where id='$ptr';")->fetch();
+				if (!$row && $ptr) break;
+				if ($row) $capt = $row['caption']; else $capt = 'Корень';
+				$res2 = $con->query("select * from {$pr}rights where basis='{$row['id']}';");
+				while ($row2 = $res2->fetch()) {
+					$N++;
+					if ($row2['uid'] == 0) $to = '(всем)'; else {
+						$u = $con->query("select * from {$pr}users where id='{$row2['uid']}';")->fetch();
+						$to = $u['login'];
+					}
+					$grants = '';
+					foreach ($grnt as $vr => $vl) if ($row2['grants'] & $vr) $grants .= $vl . '<br />';
+					$ta = '<a href="?id='.$p['id'].'&grant='.$row2['id'].'">';
+					echo '<tr>';
+					echo '<td>'.$ta.$N.'</a></td>';
+					echo '<td>'.$ta.$capt.'</a></td>';
+					echo '<td>'.$ta.$to.'</a></td>';
+					echo '<td>'.$ta.$grants.'</a></td>';
+					echo '</tr>';
+				}
+				if ($ptr == 0) break;
+				$ptr = $row['parent'];
+			}
+			echo '<tr><td></td><td><a href="?id='.$p['id'].'&grant=0">Добавить</a></td><td></td><td></td></tr>';
+			echo '</table></div>';
+		}
+		return $ret;
+	}
+	
+	function sysEditStructGrants ($p, $mode='') {
+		global $session, $user, $input, $err, $con, $data;
+		if (!grantedForMe ($p['id'], CHANGE_GRANTS)) return;
+		if (!$mode) {
+			$mode = 'form';
+			if (isset ($p['act']) && $p['act'] == 'struct_grants') $mode = 'do';
+		}
+		$pr = $data['mysql']['pref'].'_';
+		$ret = 'form';
+		$grnt = [
+			1=>'Полный доступ',
+			2=>'Просмотр страницы',
+			4=>'Просмотр данных',
+			8=>'Добавление субэлементов',
+			16=>'Редактирование уще существующих субэлементов',
+			32=>'Удаление субэлементов',
+			64=>'Редактирование полей элемента',
+			128=>'Выдача прав',
+		];
+		if ($mode == 'do') {
+			$ret = 'err';
+			if (!$err) {
+				$gr = false;
+				if (!isset($p['grant'])) $err.='Номер записи в списке прав не указан<br />';
+			}
+			if (!$err) {
+				$gr = $con->query("select * from {$pr}rights where id='{$p['grant']}';")->fetch();
+				if ($gr) $elid = $gr['basis']; else $elid = $p['id'];
+				if (!grantedForMe ($elid, CHANGE_GRANTS)) $err.='У Вас нет прав на редактирование прав доступа к указанному элементу<br />';
+			}
+			if (!$err) {
+				if ($p['for_type'] == 0) $uid = 0; else {
+					$u = $con->query("select * from {$pr}users where login='{$p['username']}';")->fetch();
+					if ($u) {
+						$uid = $u['id'];
+						if ($uid == $user['id']) $err.='Нельзя редактировать права доступа самому себе<br />';
+					} else $err.='Указанный логин не найден<br />';
+				}
+			}
+			if (!$err) {
+				$grants = 0;
+				if ($gr) $grants = $gr['grants'];
+				foreach ($grnt as $vr => $vl) if (grantedForMe ($elid, $vr)) $grants &= !$vr;
+				$x = $p['grants'];
+				foreach ($p['grants'] as $vr => $vl) if (grantedForme ($elid, $vr) && $vl) $grants |= $vr;
+				if ($gr) {
+					if ($grants)
+					 $con->exec("update {$pr}rights set uid='$uid', grants='$grants' where id='{$gr['id']}';");
+					else
+					 $con->exec("delete from {$pr}rights where id='{$gr['id']}';");
+				} else {
+					if ($grants)
+					 $con->exec ("insert into {$pr}rights (basis, uid, grants) values ('$elid','$uid','$grants');");
+				}
+				$ret = 'done';
+			}
+			$mode = 'form';
+		}
+		if ($mode == 'form' && !isset($p['act'])) {
+			$gr = false;
+			if (isset($p['grant'])) {
+				$gr = $con->query("select * from {$pr}rights where id='{$p['grant']}';")->fetch();
+				if (!grantedForMe ($gr['basis'], CHANGE_GRANTS)) $gr = false;
+			}
+			if ($gr) {
+				$capt = $con->query("select * from {$pr}struct where id='{$gr['basis']}';")->fetch()['caption'];
+				if (!$capt) $capt = 'Корень';
+				if ($gr['uid']) {
+					$gr['for_type'] = 1;
+					$gr['username'] = $con->query("select * from {$pr}users where id='{$gr['uid']}';")->fetch()['login'];
+				} else {
+					$gr['for_type'] = 0;
+				}
+				$opts = [];
+				foreach ($grnt as $vr=>$vl) if (grantedForMe($gr['basis'], $vr)) $opts[$vr] = $vl;
+				$form = [
+					'caption'=>'Изменить право доступа',
+					'defaults'=>$gr,
+					'hidden'=>['id'=>$p['id'], 'grant'=>$p['grant']],
+					'fields'=>[
+						['Элемент','','info',$capt],
+						['Кому','for_type','select','opts'=>[0=>'Всем',1=>'Пользователю']],
+						['Логин','username','text','if'=>'for_type.value==1'],
+						['Права','grants','maskselect','opts'=>$opts],
+					],
+					'submit'=>'?act=struct_grants',
+					'cancel'=>'?id='.$p['id'],
+				];
+				echo makeForm ($form);
+			} else if (isset($p['grant'])) {
+				$elid = $p['id'];
+				$capt = $con->query("select * from {$pr}struct where id='{$elid}';")->fetch()['caption'];
+				if (!$capt) $capt = 'Корень';
+				$opts = [];
+				foreach ($grnt as $vr=>$vl) if (grantedForMe($elid, $vr)) $opts[$vr] = $vl;
+				$form = [
+					'caption'=>'Новое право доступа',
+					'hidden'=>['id'=>$p['id'], 'grant'=>$p['grant']],
+					'fields'=>[
+						['Элемент','','info',$capt],
+						['Кому','for_type','select','opts'=>[0=>'Всем',1=>'Пользователю']],
+						['Логин','username','text','if'=>'for_type.value==1'],
+						['Права','grants','maskselect','opts'=>$opts],
+					],
+					'submit'=>'?act=struct_grants',
+					'cancel'=>'?id='.$p['id'],
+				];
+				echo makeForm ($form);
+			}
 		}
 		return $ret;
 	}

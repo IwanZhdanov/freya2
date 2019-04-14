@@ -25,3 +25,14 @@ div.tab_dat {
 div.tab_dat.active {
 	display: block;
 }
+
+table.wiki {
+  width: 100%;
+  border-spacing: 0;
+}
+table.wiki td {
+  padding: 5px;
+  border: rgba(0,0,255,0.2) 1px solid
+}
+
+

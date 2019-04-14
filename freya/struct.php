@@ -16,6 +16,7 @@
 	$title = $h1 . ' - ' . $title;
 	$tab = 'elem2';
 	if (isset ($input['tab'])) $tab = 'elem'.$input['tab'];
+	if (isset ($input['grant'])) $tab = 'elem4';
 ?>
 
 <h1><?=$h1?></h1>
@@ -41,7 +42,8 @@
 	 <? if (sysShowStructFields ($input) == 'done') $direct = '?id='.$input['id'].'&tab=3'; ?>
 	</div>
 	<div class="tab1 tab_dat elem4">
-	 (access)
+	 <? sysShowStructGrants ($input) ?>
+	 <? if (sysEditStructGrants ($input) == 'done') $direct = '?id='.$input['id'].'&tab=4'; ?>
 	</div>
 </div>
 <script>Tabs('tab1', '<?=$tab?>');</script>
