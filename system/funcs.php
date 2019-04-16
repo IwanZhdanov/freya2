@@ -409,6 +409,9 @@ $debug = false;
 										case 'set':
 											addVars ($vars, $v[0], getVars ($vars, $vv[1]));
 											break;
+										case 'count':
+											addVars ($vars, $v[0], countVars ($vars, $vv[1]));
+											break;
 										case 'time':
 											addVars ($vars, 'year', date('Y'));
 											addVars ($vars, 'month', date('m'));
@@ -628,12 +631,102 @@ $debug = false;
 		$con->exec ("delete from {$pr}columns where id not in (select var from {$pr}data) and keep = 0;");
 	}
 	function isTrue ($vars, $vr) {
-		if (!isset ($vars[$vr])) return false;
-		$v = $vars[$vr];
+		$v = countVars ($vars, $vr);
 		if ($v == '') return false;
 		if ($v == '0') return false;
 		if ($v == 'false') return false;
 		return true;
+	}
+	function stPush (&$st, $i) {
+		$st[0]++;
+		$st[$st[0]] = $i;
+	}
+	function stPop (&$st) {
+		if ($st[0] == 0) return '';
+		$st[0]--;
+		return $st[$st[0]+1];
+	}
+	function stPri ($s) {
+		$gr = '&;|; =;!=;<;>;<=;>=; +;-;~; *;/;%; ^; !;';
+		$ret = 1;
+		$len = strlen ($gr);
+		$sym = '';
+		for ($a=0;$a<$len;$a++) {
+			if ($gr[$a] == ';') {
+				if ($sym == $s) return $ret;
+				$sym = '';
+			} else
+			if ($gr[$a] == ' ') $ret++; else $sym.=$gr[$a];
+		}
+		return 0;
+	}
+	function stQua ($s) {
+		$gr = '!; +;-;~;*;/;%;^;&;|;=;!=;<;>;<=;>=;';
+		$ret = 1;
+		$len = strlen ($gr);
+		$sym = '';
+		for ($a=0;$a<$len;$a++) {
+			if ($gr[$a] == ';') {
+				if ($sym == $s) return $ret;
+				$sym = '';
+			} else
+			if ($gr[$a] == ' ') $ret++; else $sym.=$gr[$a];
+		}
+		return 0;
+	}
+	function stCount (&$st, $sign) {
+		$v = [];
+		$q = stQua ($sign);
+		for ($a=$q;$a>=1;$a--) $v[$a] = stPop ($st);
+		$res = '';
+		if ($sign == '+') $res = $v[1]+$v[2];
+		if ($sign == '-') $res = $v[1]-$v[2];
+		if ($sign == '*') $res = $v[1]*$v[2];
+		if ($sign == '/') $res = $v[1]/$v[2];
+		if ($sign == '%') $res = $v[1]%$v[2];
+		if ($sign == '&') $res = $v[1] && $v[2];
+		if ($sign == '|') $res = $v[1] || $v[2];
+		if ($sign == '~') $res = $v[1] . $v[2];
+		if ($sign == '!') $res = ($v[1]) ? 0 : 1;
+		if ($sign == '^') $res = pow ($v[1], $v[2]);
+		if ($sign == '=') $res = ($v[1] == $v[2]) ? 1 : 0;
+		if ($sign == '!=') $res = ($v[1] != $v[2]) ? 1 : 0;
+		if ($sign == '<') $res = ($v[1] < $v[2]) ? 1 : 0;
+		if ($sign == '>') $res = ($v[1] > $v[2]) ? 1 : 0;
+		if ($sign == '<=') $res = ($v[1] <= $v[2]) ? 1 : 0;
+		if ($sign == '>=') $res = ($v[1] >= $v[2]) ? 1 : 0;
+		stPush ($st, $res);
+	}
+	function countVars ($vars, $str) {
+		preg_match_all('/[a-z][a-z0-9._]*|[0-9][0-9.,]*|[^ ]+?/ui', $str, $r);
+		$st1 = [0];
+		$st2 = [0];
+		foreach ($r[0] as $i) {
+			if (preg_match('/[a-z]/ui',$i[0])) {
+				if (isset ($vars[$i])) stPush ($st1, $vars[$i]);
+				 else stPush ($st1, '');
+			} else
+			if (preg_match('/[0-9]/ui',$i[0])) {
+				stPush ($st1, $i);
+			} else
+			{
+				while (true) {
+					if ($st2[0] == 0) break;
+					$sign = stPop ($st2);
+					if (stPri ($sign) < stPri($i)) {
+						stPush ($st2, $sign);
+						break;
+					}
+					stCount ($st1, $sign);
+				}
+				stPush ($st2, $i);
+			}
+		}
+		while ($st2[0]) {
+			stCount ($st1, stPop($st2));
+		}
+		$result = stPop($st1);
+		return $result;
 	}
 	function getVars ($vars, $vr) {
 		$ret = $vr;
