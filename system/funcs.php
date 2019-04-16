@@ -418,6 +418,17 @@ $debug = false;
 											addVars ($vars, 'seconds', date('s'));
 											addVars ($vars, 'day', date('N'));
 											break;
+										case 'mktime':
+											$vls = ['seconds'=>60,'minutes'=>60,'hours'=>24,'date'=>-1,'month'=>12,'year'=>-2];
+											foreach ($vls as $vr => $vl) {
+												if ($vl == -2) continue;
+												$i = getVars ($vars, $vr);
+												$max = $vl;
+												if ($max) {
+													while ($i < 0) {
+												}
+											}
+											break;
 										case 'replace':
 											addVars ($vars, $v[0], preg_replace ('/'.$v[1].'/ui', $v[2], getVars($vars, $v[3])));
 											break;

@@ -96,3 +96,26 @@ ul.pagination li {
 .tab-wiki {
 	overflow: auto;
 }
+
+.calendar-div {
+	position:absolute;
+	border:1px black solid; 
+	background:white; 
+	padding:5px; 
+}
+.calendar-div a {
+	color: black;
+	text-decoration: initial;
+}
+.calendar-div th {
+	text-align: center;
+}
+.calendar-div td {
+	text-align: center;
+}
+.calendar-div td.holiday {
+	color: red;
+}
+.calendar-div td.day:hover {
+	background: #ddd;
+}
