@@ -24,7 +24,7 @@
 			'=4'=>['<div class="h5">','</div>', true],
 			'-4'=>['<hr />','', true],
 			'*2'=>['<b>','</b>', false],
-			'/2'=>['<i>','</i>', false],
+			'.2'=>['<i>','</i>', false],
 			'_2'=>['<u>','</u>', false],
 			'-3'=>['<strike>','</strike>', false],
 			'^2'=>['<sup>','</sup>', false],

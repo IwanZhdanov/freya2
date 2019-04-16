@@ -28,17 +28,19 @@
 
 	preg_match_all ('/^\/([^\/]+)\//ui', $_SERVER['REQUEST_URI'], $x);
 	if (count ($x[0])) $input['page'] = $x[1][0];
+	$needCahce = false;
 	$html_code = 'Freya v2.0<br />';
 	$vars = [];
 	$struct = isset ($input['page']) ? $input['page'] : 'index';
-	while (true) {
+	//while (true) {
 		$elem = $con->query("select * from {$data['mysql']['pref']}_struct where alias='$struct' or hid='$struct';")->fetch();
-		if ($elem || $struct == 'index') break;
-		$struct = 'index';
-	}
+	//	if ($elem || $struct == 'index') break;
+	//	$struct = 'index';
+	//}
 	if ($elem && grantedForMe($elem['id'], VIEW_PAGE)) {
 		$dat = $con->query("select * from {$data['mysql']['pref']}_data where elem='{$elem['id']}' and var in (select id from {$data['mysql']['pref']}_columns where caption='HTML');")->fetch();
 		if ($dat) {
+			$needCache = true;
 			if (is_array ($input)) foreach ($input as $vr => $vl) {
 				addVars ($vars, $vr, $vl, ['get']);
 			}
@@ -68,5 +70,6 @@
 	$html_code = applyTemplates ($html_code, $vars);
 	$html_code = applyWiki ($html_code);
 	
+	if (!$needCache) $cache_hash = '';
 	require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
 

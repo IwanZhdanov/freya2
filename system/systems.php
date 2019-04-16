@@ -820,7 +820,7 @@
 					if (isset ($p['dat'][$vr.'_q'])) $vl = $p['dat'][$vr.'_q'];
 					$check = $con->query("select * from {$pr}columns where id={$vr};")->fetch();
 					if ($check['groupid'] != $elem['parent']) {
-						if (!$vl) continue;
+						if (!$p['dat'][$vr]) continue;
 						$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ) values ('{$elem['parent']}', '{$check['caption']}', '{$check['vrname']}', '{$check['typ']}');");
 						$check = $con->query("select * from {$pr}columns order by -id limit 1;")->fetch();
 						$vr = $check['id'];
@@ -829,7 +829,7 @@
 						if (isset ($_FILES['dat']['name'][$vr]) && $_FILES['dat']['size'][$vr]) $vl = saveLoadedFile ($vr, $p['id']);
 						 else $vl = '!NOP!';
 					}
-					if (!$p['dat'][$vr]) {
+					if (isset ($p['dat'][$vr]) && !$p['dat'][$vr]) {
 						$con->exec("delete from {$pr}data where elem='{$p['id']}' and var='$vr';");
 						clearColumns();
 					} else if ($vl == '!NOP!') {
@@ -997,7 +997,8 @@
 				$L = $len;
 				if ($row['id'] == $parent) $L = 5;
 				if ($row['id'] == $elid) $L = -1;
-				$res2 = $con->query("select * from {$pr}columns where groupid = {$row['id']} and typ!='file' order by sort;");
+//				$res2 = $con->query("select * from {$pr}columns where groupid = {$row['id']} and typ!='file' order by sort;");
+				$res2 = $con->query("select * from {$pr}columns where groupid = {$row['id']} order by sort;");
 				while ($row2 = $res2->fetch()) {
 					if (!isset ($list[$row2['caption']]) || $list[$row2['caption']]['len'] > $L) {
 						$list[$row2['vrname']] = [
