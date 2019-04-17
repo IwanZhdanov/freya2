@@ -48,7 +48,7 @@
 			if (mb_strpos ($str, '<script') !== false) $script = true;
 			if (mb_strpos ($str, '</script>') !== false) $script = false;
 			if ($script) {
-				$ret .= $str . "\n"
+				$ret .= $str . "\n";
 			} else {
 				$str .= ' ';
 				$oneline = (mb_strpos($str, '<') !== false);
