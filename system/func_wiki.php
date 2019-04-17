@@ -37,6 +37,7 @@
 		$lineType = '';
 		preg_match_all ('/[ \t]*([^\r\n]+)[ \t]*/ui', $txt, $line);
 		$qua = count ($line[0]);
+		$script = false;
 		for ($a=0;$a<$qua;$a++) {
 			$lastLineType = $lineType;
 			$ln = '';
@@ -44,39 +45,44 @@
 			$symq = 0;
 			$str = $line[1][$a];
 			if (mb_substr($str, mb_strlen($str)-1,1) == '|') $str = mb_substr($str, 0, mb_strlen($str)-1);
-			$str .= ' ';
-			$oneline = (mb_strpos($str, '<') !== false);
-			$str = preg_replace ('/\[\[([^\]\|]*?)\|([^\]]*?)\]\]/ui','<a href="$1">$2</a>',$str);
-			$q = mb_strlen ($str);
-			$canTab = mb_substr($str, 0, 1) == '|';
-			for ($b=0;$b<$q;$b++) {
-				$ch = mb_substr ($str, $b, 1);
-				if ($canTab && $ch == '|' && $b) $ch = '</td><td>';
-				if ($sym == $ch) $symq++; else {
-					$ln .= flushWiki ($sym, $symq, $oneline, $open, $flags);
-					$sym = $ch;
-					$symq = 1;
+			if (mb_strpos ($str, '<script') !== false) $script = true;
+			if (mb_strpos ($str, '</script>') !== false) $script = false;
+			if ($script) {
+				$ret .= $str . "\n"
+			} else {
+				$str .= ' ';
+				$oneline = (mb_strpos($str, '<') !== false);
+				$str = preg_replace ('/\[\[([^\]\|]*?)\|([^\]]*?)\]\]/ui','<a href="$1">$2</a>',$str);
+				$q = mb_strlen ($str);
+				$canTab = mb_substr($str, 0, 1) == '|';
+				for ($b=0;$b<$q;$b++) {
+					$ch = mb_substr ($str, $b, 1);
+					if ($canTab && $ch == '|' && $b) $ch = '</td><td>';
+					if ($sym == $ch) $symq++; else {
+						$ln .= flushWiki ($sym, $symq, $oneline, $open, $flags);
+						$sym = $ch;
+						$symq = 1;
+					}
 				}
-			}
-			$ln = str_replace (':<i>', '://', $ln);
-			if ($ln) {
-				if (mb_strpos ($lineTypes, $ln[0]) !== false) $lineType = $ln[0]; else $lineType = '';
-				if ($lineType != $lastLineType) {
-					if ($lastLineType == '#') $ret .= "</ol>\n";
-					if ($lastLineType == '*') $ret .= "</ul>\n";
-					if ($lastLineType == '|') $ret .= "</table></div>\n";
-					if ($lineType == "#") $ret .= "<ol>\n";
-					if ($lineType == "*") $ret .= "<ul>\n";
-					if ($lineType == "|") $ret .= "<div class=\"tab-wiki\"><table class=\"wiki\">\n";
+				if ($ln) {
+					if (mb_strpos ($lineTypes, $ln[0]) !== false) $lineType = $ln[0]; else $lineType = '';
+					if ($lineType != $lastLineType) {
+						if ($lastLineType == '#') $ret .= "</ol>\n";
+						if ($lastLineType == '*') $ret .= "</ul>\n";
+						if ($lastLineType == '|') $ret .= "</table></div>\n";
+						if ($lineType == "#") $ret .= "<ol>\n";
+						if ($lineType == "*") $ret .= "<ul>\n";
+						if ($lineType == "|") $ret .= "<div class=\"tab-wiki\"><table class=\"wiki\">\n";
+					}
+					if ($lineType == '') {
+						if (!$oneline) $ln = '<p>'.$ln.'</p>';
+					} else $ln = mb_substr ($ln, mb_strlen ($lineType));
+					if ($lineType == '#' || $lineType == '*') $ln = '<li>'.$ln.'</li>';
+					if ($lineType == '|') $ln = '<tr><td>'.$ln.'</td></tr>';
+					$ret .= $ln."\n";
 				}
-				if ($lineType == '') {
-					if (!$oneline) $ln = '<p>'.$ln.'</p>';
-				} else $ln = mb_substr ($ln, mb_strlen ($lineType));
-				if ($lineType == '#' || $lineType == '*') $ln = '<li>'.$ln.'</li>';
-				if ($lineType == '|') $ln = '<tr><td>'.$ln.'</td></tr>';
-				$ret .= $ln."\n";
+				$lastLineType = $lineType;
 			}
-			$lastLineType = $lineType;
 		}
 		if ($lastLineType == '#') $ret .= "</ol>\n";
 		if ($lastLineType == '*') $ret .= "</ul>\n";
