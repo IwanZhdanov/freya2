@@ -128,7 +128,8 @@
 			}
 			if ($line[2] == 'area') {
 				//$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'">'.$line[3].'</textarea>';
-				$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'" onkeydown="setTab(event, this);" onkeypress="return noCtrlS(event);" wrap="on"'.$format.'>'.$line[3].'</textarea>';
+				$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'" class="editor"'.$format.'>'.$line[3].'</textarea>';
+				//$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'" onkeydown="setTab(event, this);" onkeypress="return noCtrlS(event);" wrap="on"'.$format.'>'.$line[3].'</textarea>';
 			}
 			if ($line[2] == 'file') {
 				$arr = [];

@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="/static/style.css">
 <link rel="stylesheet" href="/static/freya.css">
 <script src="/static/script.js"></script>
+<script src="/static/texteditor.js"></script>
 </head>
 <body>
 <? echo $err; $session['err'] = ''; ?>
