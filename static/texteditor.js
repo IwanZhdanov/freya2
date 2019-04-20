@@ -73,7 +73,7 @@ function txtStart (elem) {
 
 	div_ed.value = elem.value;
 	div4.style.backgroundColor = getComputedStyle(elem).backgroundColor;
-	div4.text = elem;
+	div_ed.text = elem;
 	div_ed.style.backgroundColor = getComputedStyle(elem).backgroundColor;
 
 	txtCanClose = 0;
