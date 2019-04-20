@@ -11,6 +11,7 @@
 </div>
 <div class="row">
 	<div class="col-2" style="border-right:#ccc solid 1px">
+		<p><a href="search.php">Поиск</a></p>
 		<p><a href="struct.php?id=0">Корень</a></p>
 		<div class="left_list">
 		<?php
