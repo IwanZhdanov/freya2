@@ -126,6 +126,9 @@
 					$ret .= '<label for="'.$line[1].'_'.$vr.'_'.$chkId.'">'.$vl.'</label><br />';
 				}
 			}
+			if ($line[2] == 'code') {
+				$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'"'.$format.'>'.$line[3].'</textarea>';
+			}
 			if ($line[2] == 'area') {
 				//$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'">'.$line[3].'</textarea>';
 				$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'" class="editor"'.$format.'>'.$line[3].'</textarea>';
