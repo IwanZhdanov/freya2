@@ -1,7 +1,7 @@
 <?php
 	$body = ob_get_clean();
 	$session['err'] .= $err;
-	$_SESSION[$data['site']['id']] = $session;
+	if (isset ($data)) $_SESSION[$data['site']['id']] = $session;
 	if ($direct) {
 		header ('Location: '.$direct);
 		die();
@@ -42,5 +42,5 @@
 	}
 	/**/
 	echo $x;
-	$_SESSION[$data['site']['id']] = $session;
+	if (isset ($data)) $_SESSION[$data['site']['id']] = $session;
 	

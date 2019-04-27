@@ -5,7 +5,7 @@
 	require 'a_top.php';
 ?>
 
-		Остальное
+		Выберите одну из ссылок слева
 
 <?php
 	require 'a_bottom.php';
