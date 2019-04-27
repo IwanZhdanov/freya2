@@ -44,6 +44,7 @@
 			if (is_array ($input)) foreach ($input as $vr => $vl) {
 				addVars ($vars, $vr, $vl, ['get']);
 			}
+			inCacheAdd ($elem['id']);
 			if (isset ($input['p'])) addVars ($vars, 'pageId', ($input['p']+1));
 			addVars ($vars, 'template.id', $elem['id']);
 			addVars ($vars, 'title', $elem['caption'], ['page']);

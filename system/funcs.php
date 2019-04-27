@@ -410,6 +410,29 @@ $debug = false;
 												addVarsFrom ($vars, $row['id'], ['load']);
 											}
 											break;
+										case 'save':
+											$hid = getVars ($vars, $v[0]);
+											$row = $con->query("select * from {$pr}struct where hid='$hid';")->fetch();
+											if ($row) {
+												saveVarsFrom ($vars, $row['id']);
+											}
+											break;
+										case 'create':
+											$hid = getVars ($vars, $v[0]);
+											$row = $con->query("select * from {$pr}struct where hid='$hid';")->fetch();
+											if ($row) {
+												createVarsFrom ($vars, $row['id']);
+											}
+											break;
+										case 'delete':
+											$hid = getVars ($vars, $v[0]);
+											$row = $con->query("select * from {$pr}struct where hid='$hid';")->fetch();
+											if ($row) {
+												$p = [];
+												$p['del'][$row['id']] = 'on';
+												sysDelFromStruct ($p, 'do');
+											}
+											break;
 										case 'set':
 											addVars ($vars, $v[0], getVars ($vars, $vv[1]));
 											break;
@@ -638,7 +661,7 @@ $debug = false;
 		$v = countVars ($vars, $vr);
 		if ($v == '') return false;
 		if ($v == '0') return false;
-		if ($v == 'false') return false;
+//		if ($v == 'false') return false;
 		return true;
 	}
 	function stPush (&$st, $i) {
@@ -769,7 +792,35 @@ $debug = false;
 		}
 		return true;
 	}
+	function saveVarsFrom (&$vars, $id) {
+		global $con, $data;
+		if (!grantedForMe ($id, EDIT_TABLE_DATA)) return;
+		inCacheDel ($id);
+		$elem = $con->query("select * from {$data['mysql']['pref']}_struct where id='$id';")->fetch();
+		$hid = $elem['hid'];
+		$res = $con->query("select * from {$data['mysql']['pref']}_columns where groupid='{$elem['parent']}';");
+		while ($row = $res->fetch()) {
+			if (isset ($vars[$row['vrname']])) {
+				$vr = $con->query("select * from {$data['mysql']['pref']}_data where elem='{$id}' and var='{$row['id']}';")->fetch();
+				if ($vr) $con->exec("update {$data['mysql']['pref']}_data set value=concat(".de_quotes($vars[$row['vrname']]).") where id='{$vr['id']}';");
+				 else $con->exec("insert into {$data['mysql']['pref']}_data (elem, var, value) values ('{$id}', '{$row['id']}', concat(".de_quotes($vars[$row['vrname']])."));");
+			}
+		}
+		$con->exec ("update {$data['mysql']['pref']}_struct set caption=concat(".de_quotes($vars['caption']).") where id={$id};");
+		normal ($data['mysql']['pref'].'_data');
+	}
+	function createVarsFrom (&$vars, $par) {
+		global $con, $data;
+		if (!grantedForMe ($par, INSERT_TO_TABLE)) return;
+		$p = [];
+		$p['id'] = $par;
+		$p['captions'] = $vars['caption'];
+		sysAddToStruct ($p, 'do');
+		$row = $con->query("select * from {$data['mysql']['pref']}_struct order by -id limit 1;")->fetch();
+		saveVarsFrom ($vars, $row['id']);
+	}
 
+	
 	
 	
 	

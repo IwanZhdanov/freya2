@@ -38,6 +38,7 @@
 		preg_match_all ('/[ \t]*([^\r\n]+)[ \t]*/ui', $txt, $line);
 		$qua = count ($line[0]);
 		$script = false;
+		$lastLineType = '';
 		for ($a=0;$a<$qua;$a++) {
 			$lastLineType = $lineType;
 			$ln = '';

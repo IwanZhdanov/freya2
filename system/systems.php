@@ -506,7 +506,7 @@
 			$ret = 'err';
 			if (!$err) {
 				if ($p['id']) {
-					$par = $con->query("select * from {$pr}struct where id={$p['id_q']};")->fetch();
+					$par = $con->query("select * from {$pr}struct where id='{$p['id']}';")->fetch();
 					if (!$par) $err .= 'Неверно указан идентификатор элемента<br />';
 				}
 			}
@@ -528,7 +528,7 @@
 				'defaults'=>$p,
 				'hidden'=>['id'=>$p['id']],
 				'fields'=>[
-					['Название элементов<br>(по одному в строке)','captions','area'],
+					['Название элементов<br>(по одному в строке)','captions','code'],
 				],
 				'submit'=>'?act=struct_add',
 				'spoiler'=>'Добавить элементы',
@@ -590,7 +590,7 @@
 			while ($row = $res->fetch()) {
 				if (!$row['def']) {
 					if ($row['typ'] == 'select') {
-						$opts = '';
+						$opts = [0=>''];
 						$optA = $con->query("select * from {$pr}struct where parent in (select id from {$pr}struct where hid='{$row['typ2']}');");
 						while ($optB = $optA->fetch()) $opts[$optB['hid']] = $optB['caption'];
 						$fields[] = [$row['caption'], 'dat['.$row['id'].']', $row['typ'], 'format'=>$row['format'], 'opts'=>$opts];
@@ -792,7 +792,7 @@
 					['Имя переменной','vrname','text'],
 					['Тип','typ','select','opts'=>$types],
 					['Выбор из','typ2','text','if'=>'typ.value=="select"'],
-					['Значение','value','area','if'=>'typ.value!="file"'],
+					['Значение','value','code','if'=>'typ.value!="file"'],
 				],
 				'submit'=>'?act=struct_add_var',
 				'spoiler'=>'Добавить поле',
@@ -862,8 +862,8 @@
 				$dat = $con->query("select * from {$pr}data where elem='{$p['id']}' and var='{$row['id']}';")->fetch();
 				$value = $dat ? $dat['value'] : '';
 				if ($row['typ'] == 'select') {
-					$opts = [];
-					$optA = $con->query("select * from {$pr}struct where parent in (select id from {$pr}struct where hid='{$row['typ2']}');");
+					$opts = [0=>''];
+					$optA = $con->query("select * from {$pr}struct where parent in (select id from {$pr}struct where hid='{$row['typ2']}') order by sort;");
 					while ($optB = $optA->fetch()) $opts[$optB['hid']] = $optB['caption'];
 					$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value, 'opts'=>$opts];
 				} else
@@ -896,7 +896,7 @@
 			}
 			if (!$err) {
 				if ($p['field'] == 0) {
-					$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ, format, keep) values ('{$p['id']}', {$p['caption_q']}, '{$p['vrname']}', '{$p['typ']}', {$p['format_q']}, '{$p['keep']}');");
+					$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ, typ2, format, keep) values ('{$p['id']}', {$p['caption_q']}, '{$p['vrname']}', '{$p['typ']}', '{$p['typ2']}', {$p['format_q']}, '{$p['keep']}');");
 				} else
 				if ($p['keep'] == 'del') {
 					$con->exec ("delete from {$pr}columns where id='{$p['field']}';");
@@ -916,7 +916,7 @@
 						}
 						$con->exec ("update {$pr}columns set sort='$last' where id='{$curr['id']}';");
 					}
-					$con->exec("update {$pr}columns set caption = {$p['caption_q']}, vrname = '{$p['vrname']}', typ='{$p['typ']}', format={$p['format_q']}, def={$p['def_q']}, keep='{$p['keep']}' where id='{$p['field']}';");
+					$con->exec("update {$pr}columns set caption = {$p['caption_q']}, vrname = '{$p['vrname']}', typ='{$p['typ']}', typ2='{$p['typ2']}', format={$p['format_q']}, def={$p['def_q']}, keep='{$p['keep']}' where id='{$p['field']}';");
 				}
 				inCacheDel ($p['id']);
 				normal ($pr.'data');
