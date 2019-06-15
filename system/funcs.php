@@ -383,12 +383,18 @@ $debug = false;
 											$template = getVars($vars, $v[0]);
 											break;
 										case 'js':
-											if (isset ($v[0]) && $v[0]) $ret .= '<script src="/?page='.getVars ($vars, $v[0]).'&type=js" defer></script>';
+											if (isset ($v[0]) && $v[0]) $ret .= '<script src="/?page='.getVars ($vars, $v[0]).'&type=js"></script>';
 											 else $ret .= '<script src="/static/script.js"></script>';
 											break;
+										case 'jsDefer':
+											if (isset ($v[0]) && $v[0]) $ret .= '<script src="/?page='.getVars ($vars, $v[0]).'&type=js" defer></script>';
+											 else $ret .= '<script src="/static/script.js" defer></script>';
+											break;
 										case 'css':
-											//if (isset ($v[0]) && $v[0]) $ret .= '<link rel="stylesheet" href="/?page='.getVars($vars, $v[0]).'&type=css">';
-											// else $ret .= '<link rel="stylesheet" href="/static/style.css">';
+											if (isset ($v[0]) && $v[0]) $ret .= '<link rel="stylesheet" href="/?page='.getVars($vars, $v[0]).'&type=css">';
+											 else $ret .= '<link rel="stylesheet" href="/static/style.css">';
+											break;
+										case 'cssDefer':
 											if (isset ($v[0]) && $v[0]) $ret .= '<script>LazyCss("/?page='.getVars($vars, $v[0]).'&type=css");</script>';
 											 else $ret .= '<script>LazyCss("/static/style.css");</script>';
 											break;
