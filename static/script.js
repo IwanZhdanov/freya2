@@ -8,6 +8,17 @@ function Tabs (group, elem) {
 	for (a=0;a<q;a++) arr[a].classList.add('active');
 }
 
+// Ленивая загрузка стилей
+function LazyCss (src) {
+	window.addEventListener ('load', funtion () {
+		var link = document.createElement('link');
+		link.href = src;
+		link.rel = 'stylesheet';
+		link.type = 'text/css';
+		document.getElementsByTagName('head')[0].appendChild(link);
+	});
+}
+
 // Ленивая загрузка изображений
 function Lazy () {
  return {
