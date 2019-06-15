@@ -10,7 +10,7 @@ function Tabs (group, elem) {
 
 // Ленивая загрузка стилей
 function LazyCss (src) {
-	window.addEventListener ('load', funtion () {
+	window.addEventListener ('load', function () {
 		var link = document.createElement('link');
 		link.href = src;
 		link.rel = 'stylesheet';
