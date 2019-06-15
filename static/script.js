@@ -48,7 +48,7 @@ function Lazy () {
 }
 var LazyElem = Lazy();
 window.addEventListener ('load', LazyElem.init);
-window.addEventListener ('load', LazyElem.scroll);
+window.addEventListener ('load', function () {setTimeout (LazyElem.scroll, 100);});
 window.addEventListener ('scroll', LazyElem.scroll);
 
 // Работа с textarea
