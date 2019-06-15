@@ -48,6 +48,8 @@ function Lazy () {
 }
 var LazyElem = Lazy();
 window.addEventListener ('load', LazyElem.init);
+window.addEventListener ('load', function () {setTimeout (LazyElem.scroll, 10);});
+window.addEventListener ('load', function () {setTimeout (LazyElem.scroll, 100);});
 window.addEventListener ('load', function () {setTimeout (LazyElem.scroll, 500);});
 window.addEventListener ('scroll', LazyElem.scroll);
 
