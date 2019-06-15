@@ -54,6 +54,7 @@
 		if (!isset ($input['type']) || $input['type'] == 'css') {
 			$dat = $con->query("select * from {$data['mysql']['pref']}_data where elem='{$elem['id']}' and var in (select id from {$data['mysql']['pref']}_columns where caption='CSS');")->fetch();
 			if ($dat && $dat['value']) {
+				header('Expires: '.date ('D, d M Y', time()+86400*365).' 00:00:00 GMT');
 				header ('Content-type: text/css');
 				echo applyCode ($dat['value'], $vars);
 				die();
@@ -62,6 +63,7 @@
 		if (!isset ($input['type']) || $input['type'] == 'js') {
 			$dat = $con->query("select * from {$data['mysql']['pref']}_data where elem='{$elem['id']}' and var in (select id from {$data['mysql']['pref']}_columns where caption='JS');")->fetch();
 			if ($dat && $dat['value']) {
+				header('Expires: '.date ('D, d M Y', time()+86400*365).' 00:00:00 GMT');
 				header ('Content-type: application/javascript');
 				echo applyCode ($dat['value'], $vars);
 				die();
