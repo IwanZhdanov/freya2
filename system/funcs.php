@@ -384,7 +384,7 @@ $debug = false;
 											break;
 										case 'js':
 											if (isset ($v[0]) && $v[0]) $ret .= '<script src="/?page='.getVars ($vars, $v[0]).'&type=js" defer></script>';
-											 else $ret .= '<script src="/static/script.js" defer></script>';
+											 else $ret .= '<script src="/static/script.js"></script>';
 											break;
 										case 'css':
 											//if (isset ($v[0]) && $v[0]) $ret .= '<link rel="stylesheet" href="/?page='.getVars($vars, $v[0]).'&type=css">';
