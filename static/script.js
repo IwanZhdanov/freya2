@@ -1,3 +1,4 @@
+// Переключение табов
 function Tabs (group, elem) {
 	var arr = document.getElementsByClassName (group);
 	var a, q = arr.length;
@@ -7,6 +8,39 @@ function Tabs (group, elem) {
 	for (a=0;a<q;a++) arr[a].classList.add('active');
 }
 
+// Ленивая загрузка изображений
+function Lazy () {
+ return {
+  arr : [],
+  init : function () {
+   var arr = document.getElementsByTagName ('img');
+   var a, q = arr.length;
+   this.arr = [];
+   for (a=0;a<q;a++) {
+    this.arr[this.arr.length] = arr[a];
+    arr[a].dataset.src = arr[a].src;
+    arr[a].src = '';
+   }
+  },
+  scroll: function () {
+   var a, q = this.arr.length;
+   var rect;
+   for (a=q-1;a>=0;a--) {
+    rect = this.arr[a].getBoundingClientRect();
+    if (rect.top <= window.innerHeight) {
+     this.arr[a].src = this.arr[a].dataset.src;
+     this.arr.splice (a, 1);
+    }
+   }
+  },
+ }
+}
+var LazyElem = Lazy();
+window.addEventListener ('load', LazyElem.init);
+window.addEventListener ('load', LazyElem.scroll);
+window.addEventListener ('scroll', LazyElem.scroll);
+
+// Работа с textarea
 function setTab (event, textarea){
 		// не кропка tab - выходим
 		if( event.keyCode !== 9 )
@@ -58,6 +92,7 @@ function noCtrlS (ev) {
 	}
 }
 
+// Календарик
 var calendarDiv;
 var calendarContainer;
 var calendarElem;
