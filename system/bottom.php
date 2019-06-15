@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="/static/freya.css">
 <script src="/static/script.js"></script>
 <script src="/static/texteditor.js"></script>
+<link rel="shortcut icon" href="/static/favicon.png" type="image/png">
 </head>
 <body>
 <? echo $err; $session['err'] = ''; ?>
