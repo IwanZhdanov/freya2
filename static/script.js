@@ -26,11 +26,15 @@ function Lazy () {
   init : function () {
    var arr = document.getElementsByTagName ('img');
    var a, q = arr.length;
+   var rect;
    this.arr = [];
    for (a=0;a<q;a++) {
-    this.arr[this.arr.length] = arr[a];
-    arr[a].dataset.src = arr[a].src;
-    arr[a].src = '';
+    rect = arr[a].getBoundingClientRect();
+   	if (rect.top > window.innerHeight) {
+     this.arr[this.arr.length] = arr[a];
+     arr[a].dataset.src = arr[a].src;
+     arr[a].src = '';
+    }
    }
   },
   scroll: function () {
