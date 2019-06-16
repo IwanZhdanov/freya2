@@ -8,6 +8,16 @@ function Tabs (group, elem) {
 	for (a=0;a<q;a++) arr[a].classList.add('active');
 }
 
+// Восстановление data-href
+function restoreDataHref () {
+	var arr = document.getElementsByTagName ('a');
+	var a, q = arr.length;
+	for (a=0;a<q;a++) if (arr[a].dataset.href) {
+		arr[a].href = arr[a].dataset.href;
+	}
+}
+window.addEventListener ('load', restoreDataHref);
+
 // Ленивая загрузка стилей
 function LazyCss (src) {
 	window.addEventListener ('load', function () {
