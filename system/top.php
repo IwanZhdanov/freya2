@@ -20,6 +20,7 @@
 	$title = 'Фрейя v2.0';
 	$direct = '';
 	$err = '';
+	$msg = '';
 	$input = add_arr ($_GET);
 	$input = add_arr ($_POST, $input);
 	if (isset ($_FILES) && isset ($_FILES['dat']) && is_array ($_FILES['dat'])) foreach ($_FILES['dat']['name'] as $m => $n) $input['dat'][$m] = 'file';

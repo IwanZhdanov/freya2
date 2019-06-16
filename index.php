@@ -38,6 +38,10 @@
 	$html_code = 'Freya v2.0<br />';
 	$vars = [];
 	$struct = isset ($input['page']) ? $input['page'] : 'index';
+	
+	if (isset ($session['msg'])) addVars ($vars, 'msg', $session['msg'], ['sys']); else addVars ($vars, 'msg', '', ['sys']);
+	if (isset ($session['err'])) addVars ($vars, 'err', $session['err'], ['sys']); else addVars ($vars, 'err', '', ['sys']);
+	
 	//while (true) {
 		$elem = $con->query("select * from {$data['mysql']['pref']}_struct where alias='$struct' or hid='$struct';")->fetch();
 	//	if ($elem || $struct == 'index') break;
@@ -76,6 +80,10 @@
 			}
 		}
 	}
+	if ($session['msg']) addVars ($vars, 'msg', $session['msg'], ['sys']); else addVars ($vars, 'msg', '', ['sys']);
+	if ($session['err']) addVars ($vars, 'err', $session['err'], ['sys']); else addVars ($vars, 'err', '', ['sys']);
+	addVars ($vars, 'errmsg', 'Ошибка', []);
+	addVars ($vars, 'okmsg', 'Отправлено', []);
 	$html_code = applyTemplates ($html_code, $vars);
 	$html_code = applyWiki ($html_code);
 	

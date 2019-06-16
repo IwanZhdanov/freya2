@@ -47,9 +47,18 @@
 		if ($q) return true;
 		return false;
 	}
+	
+	function varsOnForm (&$vars, $flag) {
+		global $session, $user, $input, $err, $msg, $con, $data;
+		$errmsg = getVars ($vars, 'errmsg');
+		$okmsg = getVars ($vars, 'okmsg');
+		$vars = [];
+		if (!$flag && $errmsg) $err = $errmsg;
+		if ($flag && $okmsg) $msg = $okmsg;
+	}
 
 	function sysLogin ($p, $mode='') {
-		global $session, $user, $input, $err, $con, $data;
+		global $session, $user, $input, $err, $msg, $con, $data;
 		if (!$mode) {
 			$mode = 'form';
 			if (isset ($p['act']) && $p['act'] == 'login') $mode = 'do';
@@ -99,7 +108,7 @@
 	}
 	
 	function sysRegister ($p, $mode='') {
-		global $con, $err, $data, $input;
+		global $con, $err, $msg, $data, $input;
 		if (!$mode) {
 			$mode = 'form';
 			if (isset ($p['act']) && $p['act'] == 'register') $mode = 'do';
@@ -143,7 +152,7 @@
 	}
 	
 	function sysChPass ($p, $mode='') {
-		global $con, $err, $data, $input, $user;
+		global $con, $err, $msg, $data, $input, $user;
 		if (!$user['id']) return;
 		if (!$mode) {
 			$mode = 'form';
@@ -187,7 +196,7 @@
 	}
 	
 	function sysPassRestore ($p, $mode='') {
-		global $con, $err, $data, $input, $user, $mailList;
+		global $con, $err, $msg, $data, $input, $user, $mailList;
 		if (!$mode) {
 			$mode = 'form';
 			if (isset ($p['act']) && $p['act'] == 'restorePass') $mode = 'do';
@@ -283,7 +292,7 @@
 	}
 	
 	function sysShowStructGrants ($p, $mode='') {
-		global $session, $user, $input, $err, $con, $data;
+		global $session, $user, $input, $err, $msg, $con, $data;
 		if (!grantedForMe ($p['id'], CHANGE_GRANTS)) return;
 		if (!$mode) {
 			$mode = 'form';
@@ -344,7 +353,7 @@
 	}
 	
 	function sysEditStructGrants ($p, $mode='') {
-		global $session, $user, $input, $err, $con, $data;
+		global $session, $user, $input, $err, $msg, $con, $data;
 		if (!grantedForMe ($p['id'], CHANGE_GRANTS)) return;
 		if (!$mode) {
 			$mode = 'form';
@@ -494,7 +503,7 @@
 	}
 	
 	function sysAddToStruct ($p, $mode='') {
-		global $session, $user, $input, $err, $con, $data;
+		global $session, $user, $input, $err, $msg, $con, $data;
 		if (!grantedForMe ($p['id'], INSERT_TO_TABLE)) return;
 		if (!$mode) {
 			$mode = 'form';
@@ -539,7 +548,7 @@
 	}
 	
 	function sysAddOneToStruct ($p, $mode='', &$vars) {
-		global $session, $user, $input, $err, $con, $data;
+		global $session, $user, $input, $err, $msg, $con, $data;
 		if (!grantedForMe ($p['id'], INSERT_TO_TABLE)) return;
 		if (!$mode) {
 			$mode = 'form';
@@ -570,18 +579,18 @@
 					}
 				}
 				if ($check) {
-					$vars = [];
 					$res = $con->query("select * from {$pr}columns where groupid='{$p['id']}' and def != '' order by sort;");
 					while ($row = $res->fetch()) {
 						$value = applyCode ($row['def'], $vars);
 						$con->exec("insert into {$pr}data (elem, var, value) values ('{$elem['id']}', '{$row['id']}', '$value');");
 					}
+					varsOnForm ($vars, true);
 				}
 				inCacheDel ($p['id']);
 				normal ($pr.'struct');
 				normal ($pr.'data');
 				$ret = 'done';
-			}
+			} else varsOnForm ($vars, false);
 			$mode = 'form';
 		}
 		if ($mode == 'form' && !isset($p['act'])) {
@@ -613,7 +622,7 @@
 	}
 	
 	function sysDelFromStruct ($p, $mode='') {
-		global $session, $user, $input, $err, $con, $data;
+		global $session, $user, $input, $err, $msg, $con, $data;
 		if (!$mode) {
 			$mode = 'form';
 			if (isset ($p['act']) && $p['act'] == 'struct_del') $mode = 'do';
@@ -651,7 +660,7 @@
 	}
 	
 	function sysStructInfo ($p, $mode='') {
-		global $session, $user, $input, $err, $con, $data;
+		global $session, $user, $input, $err, $msg, $con, $data;
 		if (!grantedForMe ($p['id'], VIEW_TABLE)) return;
 		if (!$p['id']) return;
 		if (!$mode) {
@@ -741,7 +750,7 @@
 	}
 
 	function sysAddVarToStruct ($p, $mode='') {
-		global $session, $user, $input, $err, $con, $data;
+		global $session, $user, $input, $err, $msg, $con, $data;
 		if (!grantedForMe ($p['id'], EDIT_COLUMN_LIST)) return;
 		if (!$mode) {
 			$mode = 'form';

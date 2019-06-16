@@ -235,7 +235,7 @@
 	}
 		
 	function applyCode ($html, &$vars) {
-		global $con, $data, $input, $direct, $mailList;
+		global $con, $data, $input, $direct, $mailList, $err, $msg;
 		$pr = $data['mysql']['pref'].'_';
 $debug = false;
 		$html .= '{{}}';
@@ -513,12 +513,12 @@ $debug = false;
 	}
 	
 	function applyTemplates ($html, &$vars, &$was=[]) {
-		global $con, $data;
+		global $con, $data, $err, $msg;
 		$pr = $data['mysql']['pref'].'_';
 		$ret = applyCode ($html, $vars);
 		$template = '';
 		if (!$template) {
-			while ($vars['template.id'] > 0) {
+			while (isset ($vars['template.id']) && $vars['template.id'] > 0) {
 				$elem = $con->query("select * from {$pr}struct where id='{$vars['template.id']}';")->fetch();
 				$row = $con->query("select elem, value from {$pr}data where elem = '{$vars['template.id']}' and var in (select id from {$pr}columns where caption='HTML');")->fetch();
 				if ($row) {

@@ -1,6 +1,7 @@
 <?php
 	$body = ob_get_clean();
 	$session['err'] .= $err;
+	$session['msg'] .= $msg;
 	if (isset ($data)) $_SESSION[$data['site']['id']] = $session;
 	if ($direct) {
 		header ('Location: '.$direct);

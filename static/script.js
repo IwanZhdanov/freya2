@@ -67,6 +67,35 @@ window.addEventListener ('load', function () {setTimeout (LazyElem.scroll, 100);
 window.addEventListener ('load', function () {setTimeout (LazyElem.scroll, 500);});
 window.addEventListener ('scroll', LazyElem.scroll);
 
+// Ajax
+function destroyScript (tag, renew) {
+	var url = tag.src;
+	var a;
+	tag.parentNode.removeChild(tag);
+	if (renew) {
+		a = url.indexOf('rnd=');
+		if (a > -1) url = url.substr(0,a);
+		url += 'rnd=' + Math.random();
+		if (typeof (renew) == 'boolean') startScript (url, true);
+		if (typeof (renew) == 'function') renew();
+	}
+}
+function ajax (url, renew) {
+	url = url.replace (/ /gi, '+');
+	var i = 'script'+parseInt(Math.random()*1000000, 10)
+	var sc = document.createElement ('script');
+	var delim;
+	sc.id = i;
+	if (url.indexOf('?') == -1) delim = '?'; else delim = '&';
+	sc.src = url + delim + 'rnd='+Math.random();
+	sc.onload = function () {destroyScript(this, renew);};
+	sc.error = function () {destroyScript(this, renew);};
+	document.getElementsByTagName('head')[0].appendChild (sc);
+}
+
+// Вывод сообщений об ошибке
+window.addEventListener ('load', function () {ajax ('/static/msgs.php');});
+
 // Работа с textarea
 function setTab (event, textarea){
 		// не кропка tab - выходим
