@@ -26,8 +26,14 @@
 				}
 			}
 
-	preg_match_all ('/^\/([^\/]+)\//ui', $_SERVER['REQUEST_URI'], $x);
-	if (count ($x[0])) $input['page'] = $x[1][0];
+	preg_match_all ('/\/([^\/]+)/ui', $_SERVER['REQUEST_URI'], $x);
+	$links = [];
+	if ($q = count ($x[0])) {
+		if ($q >= 1) $links['page'] = $x[1][0];
+		if ($q >= 2) $links['id'] = $x[1][1];
+		for ($a=1;$a<=$q;$a++) $links['par'.$a] = $x[1][$a-1];
+	}
+	$input = add_arr ($links, $input);
 	$needCahce = false;
 	$html_code = 'Freya v2.0<br />';
 	$vars = [];
