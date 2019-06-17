@@ -12,6 +12,7 @@
 	
 	$session = isset ($data) && isset ($_SESSION[$data['site']['id']]) ? $_SESSION[$data['site']['id']] : [];
 	if (!isset ($session['err'])) $session['err'] = '';
+	if (!isset ($session['msg'])) $session['msg'] = '';
 	if (isset ($session['user'])) {
 		$user = $con->query("select * from {$data['mysql']['pref']}_users where id='{$session['user']}';")->fetch();
 	} else {
