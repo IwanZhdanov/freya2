@@ -44,5 +44,6 @@
 	}
 	/**/
 	echo $x;
+	unset ($session['lastform']);
 	if (isset ($data)) $_SESSION[$data['site']['id']] = $session;
 	

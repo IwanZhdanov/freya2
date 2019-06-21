@@ -1,7 +1,7 @@
 <?php
 	require $_SERVER['DOCUMENT_ROOT'].'/system/top.php';
 
-			if (!isset ($_POST) || $_POST==[]) {
+			if ((!isset ($_POST) || $_POST==[]) && !isset($_GET['rand'])) {
 				$cache_hash = hash('SHA256', $_SERVER['HTTP_HOST'].' -> '.$_SERVER['REQUEST_URI']);
 				$cache_filename = $_SERVER['DOCUMENT_ROOT'].'/cache/'.$cache_hash.'.html';
 				if (is_file($cache_filename)) {
@@ -83,6 +83,7 @@
 	if ($session['msg']) addVars ($vars, 'msg', $session['msg'], ['sys']); else addVars ($vars, 'msg', '', ['sys']);
 	if ($session['err']) addVars ($vars, 'err', $session['err'], ['sys']); else addVars ($vars, 'err', '', ['sys']);
 	addVars ($vars, 'errmsg', 'Ошибка', []);
+	addVars ($vars, 'errmsg_lnk', 'Ссылки не разрешены', []);
 	addVars ($vars, 'okmsg', 'Отправлено', []);
 	$html_code = applyTemplates ($html_code, $vars);
 	$html_code = applyWiki ($html_code);

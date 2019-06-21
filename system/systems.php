@@ -48,13 +48,32 @@
 		return false;
 	}
 	
-	function varsOnForm (&$vars, $flag) {
+	function varsOnFormArr ($arr) {
+		$ret = [];
+		foreach ($arr as $vr => $vl) {
+			if (strpos ($vr, '_q') === false) {
+				if (is_array ($vl)) $ret[$vr] = varsOnFormArr($vl);
+				else $ret[$vr] = $vl;
+			}
+		}
+		return $ret;
+	}
+	
+	function varsOnForm (&$vars, $flag, $p=[]) {
 		global $session, $user, $input, $err, $msg, $con, $data;
-		$errmsg = getVars ($vars, 'errmsg');
+		if (isset ($vars['errmsg_'.$err])) $errmsg = $vars['errmsg_'.$err];
+		 else $errmsg = getVars ($vars, 'errmsg');
 		$okmsg = getVars ($vars, 'okmsg');
-		$vars = [];
+		if ($okmsg) $vars = [];
 		if (!$flag && $errmsg) $err = $errmsg;
-		if ($flag && $okmsg) $msg = $okmsg;
+		if ($flag && $okmsg) {
+			$msg = $okmsg;
+			unset ($session['lastform']);
+		}
+		if (!$flag && is_array($p)) {
+			$session['lastform'] = varsOnFormArr ($p);
+			unset ($session['lastform']['act']);
+		}
 	}
 
 	function sysLogin ($p, $mode='') {
@@ -560,8 +579,14 @@
 			$ret = 'err';
 			if (!$err) {
 				if ($p['id']) {
-					$par = $con->query("select * from {$pr}struct where id={$p['id_q']};")->fetch();
+					$par = $con->query("select * from {$pr}struct where id='{$p['id']}';")->fetch();
 					if (!$par) $err .= 'Неверно указан идентификатор элемента<br />';
+				}
+			}
+			if (!$err) {
+				$res = $con->query("select id from {$pr}columns where groupid = '{$p['id']}' and typ in ('area','code');");
+				while ($row = $res->fetch()) {
+					if (preg_match ('/\.[A-Za-z]{2}/ui', $p['dat'][$row['id']])) $err = 'lnk';
 				}
 			}
 			if (!$err) {
@@ -590,7 +615,9 @@
 				normal ($pr.'struct');
 				normal ($pr.'data');
 				$ret = 'done';
-			} else varsOnForm ($vars, false);
+			} else {
+				varsOnForm ($vars, false, $p);
+			}
 			$mode = 'form';
 		}
 		if ($mode == 'form' && !isset($p['act'])) {
@@ -616,6 +643,7 @@
 			];
 			if ($p['spoiler']) $form['spoiler'] = $p['spoiler'];
 			echo makeForm ($form);
+			//unset ($session['lastform']);
 		}
 		if (isset ($p['dat'])) doMail ($p['dat'], $vars, $ret=='done');
 		return $ret;

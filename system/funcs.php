@@ -48,10 +48,20 @@
 		}
 	}
 	
+	function makeFormDefaults ($arr, &$ret=[], $prefix='') {
+		foreach ($arr as $vr => $vl) {
+			if ($prefix) $i = $prefix . '[' . $vr . ']'; else $i = $vr;
+			if (is_array ($vl)) $ret[$i] = makeFormDefaults($vl, $ret, $i);
+			 else $ret[$i] = $vl;
+		}
+		return $ret;
+	}
+	
 	function makeForm ($data) {
 		global $session, $con;
 		ini_set('display_errors','Off');
 		$fchId = rand (1000, 9999);
+		if (isset ($data['defaults'])) $data['defaults'] = makeFormDefaults($data['defaults']);
 		$showHide = '';
 		$ret = '';
 		if (isset ($data['spoiler'])) $data['cancel'] = 'javascript:%%SPOILER%%';
@@ -228,14 +238,30 @@
 		$comma = '?';
 		$ret = '';
 		foreach ($get as $m => $n) {
-			$ret .= $comma . $m . '=' . $n;
+			$ret .= $comma . $m;
+			if ($n !== true) $ret .= '=' . $n;
 			$comma = '&';
 		}
 		return $ret;
 	}
+	
+	function makeLinkFromUrl ($url, $set=[], $def=[]) {
+		$a = mb_strpos ($url, '?');
+		if ($a===false) return $url . makeLink ([], $set, $def);
+		$uri = mb_substr($url, 0, $a);
+		$arrstr = mb_substr($url, $a+1);
+		preg_match_all ('/([^=&]+)(?:=([^&]+))/ui', $arrstr, $x);
+		$q = count ($x[0]);
+		$get = [];
+		for ($a=0;$a<$q;$a++) {
+			if (isset ($x[2][$a])) $vl = $x[2][$a]; else $vl = '1';
+			$get[$x[1][$a]] = $vl;
+		}
+		return $uri . makeLink ($get, $set, $def);
+	}
 		
 	function applyCode ($html, &$vars) {
-		global $con, $data, $input, $direct, $mailList, $err, $msg;
+		global $session, $con, $data, $input, $direct, $mailList, $err, $msg;
 		$pr = $data['mysql']['pref'].'_';
 $debug = false;
 		$html .= '{{}}';
@@ -492,12 +518,16 @@ $debug = false;
 											$elem = $con->query("select * from {$pr}struct where hid='{$v[0]}';")->fetch();
 											if ($elem) {
 												ob_start ();
-												$p = $input;
+												$p = [];
+												if (isset ($session['lastform'])) $p = add_arr ($p, $session['lastform']);
+												$p = add_arr ($p, $input);
 												$p['id'] = $elem['id'];
 												$spoiler = '';
 												if (isset ($v[1])) $spoiler = getVars ($vars, $v[1]);
 												$p['spoiler'] = $spoiler;
-												if (sysAddOneToStruct ($p, '', $vars) == 'done') $direct = $_SERVER['HTTP_REFERER'];
+												$tmp = sysAddOneToStruct ($p, '', $vars);
+												if ($tmp == 'done') $direct = makeLinkFromUrl($_SERVER['HTTP_REFERER'], ['rand'=>0], ['rand'=>0]);
+												if ($tmp == 'err') $direct = makeLinkFromUrl($_SERVER['HTTP_REFERER'], ['rand'=>rand(10000,99999)]);
 												$ret .= ob_get_clean();
 											}
 											break;
@@ -587,7 +617,7 @@ $debug = false;
 				$vl = preg_replace ('/\'/', '', $vl);
 				$vl = preg_replace ('/\"/', '', $vl);
 				if (!isset ($add[$vr])) $add[$vr] = $vl;
-				$add[$vr.'_q'] = 'concat('.de_quotes ($st, "'\"", ', ').')';
+				if (strpos ($vr, '_q') === false) $add[$vr.'_q'] = 'concat('.de_quotes ($st, "'\"", ', ').')';
 			}
 		}
 		return $add;
