@@ -17,7 +17,7 @@
 		}
 	}
 
-	function applyWiki ($txt) {
+	function applyWikiBlock ($txt) {
 		$open = [
 			'=2'=>['<div class="h1">','</div>', true],
 			'=3'=>['<div class="h3">','</div>', true],
@@ -88,5 +88,15 @@
 		if ($lastLineType == '#') $ret .= "</ol>\n";
 		if ($lastLineType == '*') $ret .= "</ul>\n";
 		if ($lastLineType == '|') $ret .= "</table></div>\n";
+		return $ret;
+	}
+	
+	function applyWiki ($txt) {
+		if (!preg_match('/<html/ui', $txt)) return $txt;
+		$txt .= '<nowiki></nowiki>';
+		preg_match_all ('/((?:.|\r|\n)*?)<nowiki>[\r\n]*((?:.|\r|\n)*?)<\/nowiki>/ui', $txt, $x);
+		$q = count ($x[0]);
+		$ret = '';
+		for ($a=0;$a<$q;$a++) $ret .= applyWikiBlock ($x[1][$a]) . $x[2][$a];
 		return $ret;
 	}
