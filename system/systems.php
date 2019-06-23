@@ -64,8 +64,10 @@
 		if (isset ($vars['errmsg_'.$err])) $errmsg = $vars['errmsg_'.$err];
 		 else $errmsg = getVars ($vars, 'errmsg');
 		$okmsg = getVars ($vars, 'okmsg');
-		if ($okmsg) $vars = [];
-		if (!$flag && $errmsg) $err = $errmsg;
+		//if ($okmsg) $vars = []; ////
+		if (!$flag && $errmsg) {
+			$err = $errmsg;
+		}
 		if ($flag && $okmsg) {
 			$msg = $okmsg;
 			unset ($session['lastform']);
@@ -617,10 +619,11 @@
 				$ret = 'done';
 			} else {
 				varsOnForm ($vars, false, $p);
+				$mode = 'form';
 			}
-			$mode = 'form';
 		}
-		if ($mode == 'form' && !isset($p['act'])) {
+		if ($mode == 'form'/* && !isset($p['act'])*/) {
+			$ret = 'form';
 			$fields = [];
 			$res = $con->query ("select * from {$pr}columns where groupid='{$p['id']}' order by sort;");
 			while ($row = $res->fetch()) {

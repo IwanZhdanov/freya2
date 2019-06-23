@@ -1,7 +1,7 @@
 <?php
 	require $_SERVER['DOCUMENT_ROOT'].'/system/top.php';
 
-			if ((!isset ($_POST) || $_POST==[]) && !isset($_GET['rand'])) {
+			if (!isset ($_POST) || $_POST==[]) {
 				$cache_hash = hash('SHA256', $_SERVER['HTTP_HOST'].' -> '.$_SERVER['REQUEST_URI']);
 				$cache_filename = $_SERVER['DOCUMENT_ROOT'].'/cache/'.$cache_hash.'.html';
 				if (is_file($cache_filename)) {

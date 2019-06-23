@@ -18,7 +18,7 @@ function showMsgs () {
 	var arr = document.getElementsByClassName('msgs-here');
 	var a, q = arr.length;
 	for (a=0;a<q;a++) {
-		arr[a].outerHTML = '<?=$code?>' + arr[a].outerHTML;
+		arr[a].innerHTML = arr[a].innerHTML + '<?=$code?>';
 	}
 }
 showMsgs ();

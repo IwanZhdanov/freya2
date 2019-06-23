@@ -154,8 +154,8 @@
 			$ret .= '</div>';
 		}
 		$ret .= '<div class="row">';
-		$ret .= '<div class="col-4"></div>';
-		$ret .= '<div class="col-8">';
+		$ret .= '<div class="col-4 form_caption"></div>';
+		$ret .= '<div class="col-8 form_field">';
 		if ($data['submit']) $ret .= '<button type="submit">Ok</button> ';
 		if ($data['cancel']) {
 			$do = $data['cancel'];
@@ -517,6 +517,7 @@ $debug = false;
 										case 'formAdd':
 											$elem = $con->query("select * from {$pr}struct where hid='{$v[0]}';")->fetch();
 											if ($elem) {
+												inCacheAdd ($elem['id']);
 												ob_start ();
 												$p = [];
 												if (isset ($session['lastform'])) $p = add_arr ($p, $session['lastform']);
