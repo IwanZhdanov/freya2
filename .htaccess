@@ -1,7 +1,15 @@
 RewriteEngine on
+
+
+RewriteCond %{REQUEST_URI} ^/files/.*
+RewriteCond %{REQUEST_URI} !^/files/index.php
+RewriteRule ^.*$ /files/index.php [L]
+
+
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule . index.php [L]
+
 
 ErrorDocument 404 /
 

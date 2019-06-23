@@ -292,6 +292,29 @@
 		$session['csrf']['list'][$x[1]] = $x[0];
 		return true;
 	}
+	
+	function translit ($txt) {
+		$ltrs = ['а'=>'a', 'б'=>'b', 'в'=>'v', 'г'=>'g', 'д'=>'d', 'е'=>'e', 'ё'=>'e', 'ж'=>'zh', 'з'=>'z', 'и'=>'i', 'й'=>'j', 'к'=>'k', 'л'=>'l', 'м'=>'m', 'н'=>'n', 'о'=>'o', 'п'=>'p', 'р'=>'r', 'с'=>'s', 'т'=>'t', 'у'=>'u', 'ф'=>'f', 'х'=>'h', 'ц'=>'c', 'ч'=>'ch', 'ш'=>'sh', 'щ'=>'sch', 'ь'=>'', 'ы'=>'y', 'ъ'=>'', 'э'=>'e', 'ю'=>'ju', 'я'=>'ja'];
+		$txt = mb_strtolower ($txt);
+		$q = mb_strlen ($txt);
+		$ret = '';
+		for ($a=0;$a<$q;$a++) {
+			$ch = mb_substr($txt, $a, 1);
+			if (isset ($ltrs[$ch])) $ret .= $ltrs[$ch]; else $ret .= $ch;
+		}
+		$ret = preg_replace ('/[^a-zа-я0-9_-]/ui', '-', $ret);
+		$ret = '-'.$ret.'-';
+		$ret = preg_replace ('/-{2,}/ui', '-', $ret);
+		$ret = mb_substr($ret, 1, mb_strlen($ret)-2);
+		return $ret;
+	}
+	
+	function translitPath ($name, $path) {
+		$i = 0;
+		$q = mb_strlen ($name);
+		for ($a=0;$a<$q;$a++) if (mb_substr($name,$a,1) == '.') $i = $a;
+		return translit(mb_substr($name,0,$i)).'-'.$path;
+	}
 		
 	function applyCode ($html, &$vars) {
 		global $session, $con, $data, $input, $direct, $mailList, $err, $msg;
@@ -468,7 +491,11 @@ $debug = false;
 											break;
 										case 'file':
 											$row = $con->query("select * from {$pr}files where id='".getVars($vars, $v[0])."';")->fetch();
-											if ($row) $ret .= '/files/'.$row['path'];
+											if ($row) $ret .= '/files/'.translitPath ($row['nam'], $row['path']);
+											break;
+										case 'filename':
+											$row = $con->query("select * from {$pr}files where id='".getVars($vars, $v[0])."';")->fetch();
+											if ($row) $ret .= $row['nam'];
 											break;
 										case 'load':
 											$hid = getVars ($vars, $v[0]);
