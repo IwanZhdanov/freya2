@@ -87,7 +87,7 @@
 	addVars ($vars, 'errmsg_lnk', 'Ссылки не разрешены', []);
 	addVars ($vars, 'okmsg', 'Отправлено', []);
 	$html_code = applyTemplates ($html_code, $vars);
-	$html_code = applyWiki ($html_code);
+	$html_code = applyWiki ($html_code); 
 	
 	if (!$needCache) $cache_hash = '';
 	require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
