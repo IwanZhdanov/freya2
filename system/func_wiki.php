@@ -93,10 +93,20 @@
 	
 	function applyWiki ($txt) {
 		if (!preg_match('/<html/ui', $txt)) return $txt;
-		$txt .= '<nowiki></nowiki>';
-		preg_match_all ('/((?:.|\r|\n)*?)<nowiki>[\r\n]*((?:.|\r|\n)*?)<\/nowiki>/ui', $txt, $x);
-		$q = count ($x[0]);
 		$ret = '';
-		for ($a=0;$a<$q;$a++) $ret .= applyWikiBlock ($x[1][$a]) . $x[2][$a];
+		while (true) {
+			$a = mb_strpos ($txt, '<nowiki>');
+			if ($a === false) break;
+			$s = mb_substr ($txt, 0, $a);
+			$txt = mb_substr ($txt, $a+8);
+			if ($s) $ret .= applyWikiBlock ($s);
+
+			$a = mb_strpos ($txt, '</nowiki>');
+			if ($a === false) break;
+			$s = mb_substr ($txt, 0, $a);
+			$txt = mb_substr ($txt, $a+9);
+			if ($s) $ret .= $s;
+		}
+		$ret .= applyWikiBlock ($txt);
 		return $ret;
 	}
