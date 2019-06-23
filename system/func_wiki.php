@@ -107,6 +107,6 @@
 			$txt = mb_substr ($txt, $a+9);
 			if ($s) $ret .= $s;
 		}
-		$ret .= $txt;
+		$ret .= applyWikiBlock ($txt);
 		return $ret;
 	}
