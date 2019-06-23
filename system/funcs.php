@@ -269,7 +269,7 @@
 		}
 		$time = time();
 		$item = unic ('0123456789abcdef', 10);
-		$hash = hash ('SHA256', $item.$session['csrf']['secret']);
+		$hash = hash ('SHA256', $time.$item.$session['csrf']['secret']);
 		$token = $time.'-'.$item.'-'.$hash;
 		return $token;
 	}
@@ -280,13 +280,13 @@
 		$x = explode ('-', $value);
 		if (!isset ($x[2])) return false;
 		$time = time();
-		$time2 = $time - 60000;
-		if ($time2 - $x[0] > 0) return false;
+		$time2 = $time - 600;
+		if ($time2 > $x[0]) return false;
 		foreach ($session['csrf']['list'] as $vr => $vl) {
 			if ($vr == $x[1]) return false;
 			if ($vl < $time2) unset ($session['csrf']['list'][$vr]);
 		}
-		$hash = hash ('SHA256', $x[1].$session['csrf']['secret']);
+		$hash = hash ('SHA256', $x[0].$x[1].$session['csrf']['secret']);
 		if ($hash != $x[2]) return false;
 		
 		$session['csrf']['list'][$x[1]] = $x[0];

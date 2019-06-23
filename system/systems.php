@@ -64,7 +64,7 @@
 		if (isset ($vars['errmsg_'.$err])) $errmsg = $vars['errmsg_'.$err];
 		 else $errmsg = getVars ($vars, 'errmsg');
 		$okmsg = getVars ($vars, 'okmsg');
-		//if ($okmsg) $vars = []; ////
+		//if ($okmsg) $vars = []; ///
 		if (!$flag && $errmsg) {
 			$err = $errmsg;
 		}
