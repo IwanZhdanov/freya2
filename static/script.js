@@ -95,6 +95,14 @@ function ajax (url, renew) {
 
 // Вывод сообщений об ошибке
 window.addEventListener ('load', function () {ajax ('/static/msgs.php');});
+// Заполнение CSRF
+function fillCSRF (val) {
+	var arr = document.getElementsByName ('csrf');
+	var a, q = arr.length;
+	for (a=0;a<q;a++) arr[a].value = val;
+}
+window.addEventListener ('load', function () {ajax ('/static/csrf.php');});
+
 
 // Работа с textarea
 function setTab (event, textarea){

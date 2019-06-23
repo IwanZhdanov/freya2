@@ -83,6 +83,7 @@
 	if ($session['msg']) addVars ($vars, 'msg', $session['msg'], ['sys']); else addVars ($vars, 'msg', '', ['sys']);
 	if ($session['err']) addVars ($vars, 'err', $session['err'], ['sys']); else addVars ($vars, 'err', '', ['sys']);
 	addVars ($vars, 'errmsg', 'Ошибка', []);
+	addVars ($vars, 'errmsg_csrf', 'Форма устарела. Повторите попытку.', []);
 	addVars ($vars, 'errmsg_lnk', 'Ссылки не разрешены', []);
 	addVars ($vars, 'okmsg', 'Отправлено', []);
 	$html_code = applyTemplates ($html_code, $vars);

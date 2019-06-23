@@ -580,6 +580,9 @@
 		if ($mode == 'do') {
 			$ret = 'err';
 			if (!$err) {
+				if (!CSRF_check ($p['csrf'])) $err = 'csrf';
+			}
+			if (!$err) {
 				if ($p['id']) {
 					$par = $con->query("select * from {$pr}struct where id='{$p['id']}';")->fetch();
 					if (!$par) $err .= 'Неверно указан идентификатор элемента<br />';

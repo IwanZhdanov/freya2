@@ -78,6 +78,7 @@
 				if (isset ($data['defaults'][$vr])) $vl = $data['defaults'][$vr];
 			}
 			$ret .= '<input type="hidden" name="'.$vr.'" id="'.$vr.'" value="'.$vl.'">';
+			if ($vr == 'act') $ret .= '<input type="hidden" name="csrf" id="csrf" value="">';
 		}
 		if ($data['caption']) {
 			$ret .= '<div class="row"><div class="col-12 text-center">'.$data['caption'].'</div></div>';
@@ -258,6 +259,38 @@
 			$get[$x[1][$a]] = $vl;
 		}
 		return $uri . makeLink ($get, $set, $def);
+	}
+	
+	function CSRF_generate () {
+		global $session;
+		if (!isset ($session['csrf'])) {
+			$secret = unic ('123456789ABCDEF', 20);
+			$session['csrf'] = ['secret'=>$secret, 'list'=>[]];
+		}
+		$time = time();
+		$item = unic ('0123456789abcdef', 10);
+		$hash = hash ('SHA256', $item.$session['csrf']['secret']);
+		$token = $time.'-'.$item.'-'.$hash;
+		return $token;
+	}
+	
+	function CSRF_check ($value) {
+		global $session;
+		if (!isset ($session['csrf'])) return false;
+		$x = explode ('-', $value);
+		if (!isset ($x[2])) return false;
+		$time = time();
+		$time2 = $time - 60000;
+		if ($time2 - $x[0] > 0) return false;
+		foreach ($session['csrf']['list'] as $vr => $vl) {
+			if ($vr == $x[1]) return false;
+			if ($vl < $time2) unset ($session['csrf']['list'][$vr]);
+		}
+		$hash = hash ('SHA256', $x[1].$session['csrf']['secret']);
+		if ($hash != $x[2]) return false;
+		
+		$session['csrf']['list'][$x[1]] = $x[0];
+		return true;
 	}
 		
 	function applyCode ($html, &$vars) {
