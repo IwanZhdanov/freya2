@@ -570,14 +570,14 @@
 	
 	function sysAddOneToStruct ($p, $mode='', &$vars) {
 		global $session, $user, $input, $err, $msg, $con, $data;
-		if (!grantedForMe ($p['id'], INSERT_TO_TABLE)) return;
+		if (!grantedForMe ($p['elem_id'], INSERT_TO_TABLE)) return;
 		if (!$mode) {
 			$mode = 'form';
-			if (isset ($p['act']) && $p['act'] == 'struct_add_one') $mode = 'do';
+			if (isset ($p['act']) && $p['act'] == 'struct_add_one' && $p['id'] == $p['elem_id']) $mode = 'do';
 		}
 		$pr = $data['mysql']['pref'].'_';
 		$ret = 'form';
-		if ($mode == 'do') {
+		if ($mode == 'do' && $p['id'] == $p['elem_id']) {
 			$ret = 'err';
 			if (!$err) {
 				if (!CSRF_check ($p['csrf'])) $err = 'csrf';
@@ -628,7 +628,7 @@
 		if ($mode == 'form'/* && !isset($p['act'])*/) {
 			$ret = 'form';
 			$fields = [];
-			$res = $con->query ("select * from {$pr}columns where groupid='{$p['id']}' order by sort;");
+			$res = $con->query ("select * from {$pr}columns where groupid='{$p['elem_id']}' order by sort;");
 			while ($row = $res->fetch()) {
 				if (!$row['def']) {
 					if ($row['typ'] == 'select') {
@@ -643,7 +643,7 @@
 			$form = [
 				'caption'=>'',
 				'defaults'=>$p,
-				'hidden'=>['id'=>$p['id'], 'act'=>'struct_add_one'],
+				'hidden'=>['id'=>$p['elem_id'], 'act'=>'struct_add_one'],
 				'fields'=>$fields,
 				'submit'=>$_SERVER['REQUEST_URI'],
 			];
@@ -772,8 +772,8 @@
 					['Название элемента','caption','text', $row['caption']],
 					['Алиас','alias','text', $row['alias']],
 					['Действие','todo','select', 'opts'=>$todo],
-					['Разместить','sort_pos','select', 'sql'=>"select id, case when sort < {$row['sort']} then concat('Вверх, перед ',caption) else concat ('Вниз, после ', caption) end from {$pr}struct where parent={$row['parent']} and id != {$p['id']} order by sort;", 'if'=>'todo.value=="sort"'],
-					['Переместить','move_to','select', 'sql'=>"select id, concat('В ', caption) from {$pr}struct where parent='{$row['parent']}' and id != '{$row['id']}' order by sort;", 'opts'=>$up, 'if'=>'todo.value=="move"'],
+					['Разместить','sort_pos','select', 'sql'=>"select id, case when sort < {$row['sort']} then concat('Вверх, перед ',caption) else concat ('Вниз, после ', caption) end from {$pr}struct where parent={$row['parent']} and id != {$p['id']} order by sort;", 'if'=>'todo=="sort"'],
+					['Переместить','move_to','select', 'sql'=>"select id, concat('В ', caption) from {$pr}struct where parent='{$row['parent']}' and id != '{$row['id']}' order by sort;", 'opts'=>$up, 'if'=>'todo=="move"'],
 				],
 				'submit'=>'?act=struct_info',
 				'spoiler'=>'Настроить элемент',

@@ -3,9 +3,15 @@
 	$file = $_SERVER['REQUEST_URI'];
 	$i = 0;
 	$q = mb_strlen($file);
-	for ($a=0;$a<$q;$a++) if (mb_substr($file,$a,1) == '-') $i = $a+1;
+	for ($a=0;$a<$q;$a++) {
+		$ch = mb_substr($file,$a,1);
+		if ($ch == '-') $i = $a+1;
+		if ($ch == '.') break;
+	}
 	$file = mb_substr ($file, $i);
-	$row = $con->query("select * from {$data['mysql']['pref']}_files where path = '$file';")->fetch();
+	if (!is_file ($file)) die('Not found');
+	$db_file = preg_replace ('/s.*\./ui', '.', $file);
+	$row = $con->query("select * from {$data['mysql']['pref']}_files where path = '$db_file';")->fetch();
 	if (!$row) {
 		header ('Location: /');
 		die();

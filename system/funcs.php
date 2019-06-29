@@ -77,8 +77,8 @@
 				if (isset ($session['lastform'][$vr])) $vl = $session['lastform'][$vr];
 				if (isset ($data['defaults'][$vr])) $vl = $data['defaults'][$vr];
 			}
-			$ret .= '<input type="hidden" name="'.$vr.'" id="'.$vr.'" value="'.$vl.'">';
-			if ($vr == 'act') $ret .= '<input type="hidden" name="csrf" id="csrf" value="">';
+			$ret .= '<input type="hidden" name="'.$vr.'" id="e'.$fchId.'_'.$vr.'" value="'.$vl.'">';
+			if ($vr == 'act') $ret .= '<input type="hidden" name="csrf" id="e'.$fchId.'_csrf" value="">';
 		}
 		if ($data['caption']) {
 			$ret .= '<div class="row"><div class="col-12 text-center">'.$data['caption'].'</div></div>';
@@ -94,7 +94,12 @@
 			if (isset ($data['defaults'][$line[1]]) && $line[2] != 'pass') $line[3] = $data['defaults'][$line[1]];
 			if (isset ($line['if'])) {
 				$currId = ' id="'.$line[1].'_row"';
-				$showHide .= $line[1].'_'.$fchId.'.style.display = ('.$line['if'].')?"flex":"none";'."\n";
+				$if = $line['if'];
+				foreach ($data['fields'] as $vrnam => $vrval) {
+					$vr_name = $vrval[1];
+					$if = str_replace ($vr_name, 'e'.$fchId.'_'.$vr_name.'.value', $if);
+				}
+				$showHide .= $line[1].'_'.$fchId.'.style.display = ('.$if.')?"flex":"none";'."\n";
 			}
 			$ret .= '<div class="row" id="'.$line[1].'_'.$fchId.'">';
 			$ret .= '<div class="col-4 form_caption">'.$line[0];
@@ -108,12 +113,12 @@
 				$s = preg_replace ('/\n/i', '<br>', $s);
 				$ret .= $s;
 			}
-			if ($line[2] == 'text') $ret .= '<input name="'.$line[1].'" id="'.$line[1].'" value="'.$line[3].'"'.$format.$onchange.'>';
-			if ($line[2] == 'number') $ret .= '<input name="'.$line[1].'" id="'.$line[1].'" value="'.$line[3].'" class="number"'.$format.$onchange.'>';
-			if ($line[2] == 'pass') $ret .= '<input name="'.$line[1].'" id="'.$line[1].'" type="password" value="'.$line[3].'"'.$onchange.'>';
-			if ($line[2] == 'datetime') $ret .= '<input name="'.$line[1].'" id="'.$line[1].'" type="text" onclick="showCalendar(this);" value="'.$line[3].'"'.$format.$onchange.'>';
+			if ($line[2] == 'text') $ret .= '<input name="'.$line[1].'" id="e'.$fchId.'_'.$line[1].'" value="'.$line[3].'"'.$format.$onchange.'>';
+			if ($line[2] == 'number') $ret .= '<input name="'.$line[1].'" id="e'.$fchId.'_'.$line[1].'" value="'.$line[3].'" class="number"'.$format.$onchange.'>';
+			if ($line[2] == 'pass') $ret .= '<input name="'.$line[1].'" id="e'.$fchId.'_'.$line[1].'" type="password" value="'.$line[3].'"'.$onchange.'>';
+			if ($line[2] == 'datetime') $ret .= '<input name="'.$line[1].'" id="e'.$fchId.'_'.$line[1].'" type="text" onclick="showCalendar(this);" value="'.$line[3].'"'.$format.$onchange.'>';
 			if ($line[2] == 'select') {
-				$ret .= '<select name="'.$line[1].'" id="'.$line[1].'"'.$onchange.'>';
+				$ret .= '<select name="'.$line[1].'" id="e'.$fchId.'_'.$line[1].'"'.$onchange.'>';
 				if (is_array ($line['opts'])) foreach ($line['opts'] as $vr => $vl) {
 					if ($vr == $line[3]) $sel = ' selected'; else $sel = '';
 					$ret .= '<option value="'.$vr.'"'.$sel.'>'.$vl.'</option>';
@@ -138,17 +143,17 @@
 				}
 			}
 			if ($line[2] == 'code') {
-				$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'"'.$format.'>'.$line[3].'</textarea>';
+				$ret .= '<textarea name="'.$line[1].'" id="e'.$fchId.'_'.$line[1].'"'.$format.'>'.$line[3].'</textarea>';
 			}
 			if ($line[2] == 'area') {
 				//$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'">'.$line[3].'</textarea>';
-				$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'" class="editor"'.$format.'>'.$line[3].'</textarea>';
-				//$ret .= '<textarea name="'.$line[1].'" id="'.$line[1].'" onkeydown="setTab(event, this);" onkeypress="return noCtrlS(event);" wrap="on"'.$format.'>'.$line[3].'</textarea>';
+				$ret .= '<textarea name="'.$line[1].'" id="e'.$fchId.'_'.$line[1].'" class="editor"'.$format.'>'.$line[3].'</textarea>';
+				//$ret .= '<textarea name="'.$line[1].'" id="e'.$fchId.'_'.$line[1].'" onkeydown="setTab(event, this);" onkeypress="return noCtrlS(event);" wrap="on"'.$format.'>'.$line[3].'</textarea>';
 			}
 			if ($line[2] == 'file') {
 				$arr = [];
 				if ($line[3]) $ret .= '<img src="'.applyCode('{{file('.$line[3].')}}',$arr).'" style="width: 100px; height: 75px; object-fit: contain;" /><br />';
-				$ret .= '<input type="file" name="'.$line[1].'" id="'.$line[1].'">';
+				$ret .= '<input type="file" name="'.$line[1].'" id="e'.$fchId.'_'.$line[1].'">';
 			}
 			if ($line['postfix']) $ret .= ' '.$line['postfix'];
 			$ret .= '</div>';
@@ -213,6 +218,14 @@
 		}
 		return $ret;
 	}
+	function unlinkAll ($folder, $file) {
+		echo $file.'<br />';
+		preg_match ('/^(.*?)(?:s[^\.]*?)?(\..*)$/ui', $file, $x);
+		$list = scandir ($folder);
+		foreach ($list as $fl) {
+			if (preg_match ('/^'.$x[1].'.*?'.$x[2].'$/ui', $fl)) unlink ($folder.$fl);
+		}
+	}
 	function saveLoadedFile ($col, $elem) {
 		global $con, $data;
 		$pr = $data['mysql']['pref'].'_';
@@ -221,7 +234,9 @@
 		$x = explode ('/', $_FILES['dat']['type'][$col]);
 		$rand = rand (10000000, 999999999) .'.'. $x[1];
 		$row = $con->query("select * from {$pr}files where col='$col' and elem='$elem';")->fetch();
-		if ($row && is_file ($folder.$row['path'])) unlink ($folder.$row['path']);
+		if ($row && is_file ($folder.$row['path'])) {
+			unlinkAll ($folder, $row['path']);
+		}
 		$con->exec("delete from {$pr}files where col='$col' and elem='$elem';");
 		if (copy($_FILES['dat']['tmp_name'][$col], $folder.$rand)) {
 			$con->exec ("insert into {$pr}files (col, elem, nam, path) values ('$col', '$elem', '$filename', '$rand');");
@@ -309,11 +324,42 @@
 		return $ret;
 	}
 	
-	function translitPath ($name, $path) {
+	function translitPath ($name, $path, $size) {
 		$i = 0;
 		$q = mb_strlen ($name);
 		for ($a=0;$a<$q;$a++) if (mb_substr($name,$a,1) == '.') $i = $a;
-		return translit(mb_substr($name,0,$i)).'-'.$path;
+		return translit(mb_substr($name,0,$i)).'-'.preg_replace ('/\./ui', $size.'.', $path);
+	}
+	
+	function resizeimg ($src, $dest, $size) {
+		preg_match_all ('/\d+/ui', $size, $x);
+		$q = count ($x[0]);
+		if ($q == 0) {
+			copy ($src, $dest);
+			return;
+		}
+		if ($q >= 1) $tmpwidth = $x[0][0];
+		if ($q == 2) $tmpheight = $x[0][1]; else $tmpheight = $tmpwidth;
+		
+		list($width, $height, $type) = getimagesize($src);
+		if ($width == 0) echo $src;
+		$percent = 1;
+		if ($percent > ($tmpwidth / $width)) $percent = $tmpwidth / $width;
+		if ($percent > ($tmpheight / $height)) $percent = $tmpheight / $height;
+		$newwidth = $width * $percent;
+		$newheight = $height * $percent;
+		
+		$thumb = imagecreatetruecolor($newwidth, $newheight);
+		if ($type == 1) $source = imagecreatefromgif($src);
+		if ($type == 2) $source = imagecreatefromjpeg($src);
+		if ($type == 3) $source = imagecreatefrompng($src);
+		
+		imagecopyresized($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+
+		if ($type == 1) imagegif($thumb, $dest);
+		if ($type == 2) imagejpeg($thumb, $dest);
+		if ($type == 3) imagepng($thumb, $dest);
+		die();////
 	}
 		
 	function applyCode ($html, &$vars) {
@@ -491,7 +537,16 @@ $debug = false;
 											break;
 										case 'file':
 											$row = $con->query("select * from {$pr}files where id='".getVars($vars, $v[0])."';")->fetch();
-											if ($row) $ret .= '/files/'.translitPath ($row['nam'], $row['path']);
+											if ($row) {
+												if (!isset ($v[1]) || !$v[1]) $size = ''; else {
+													$size = 's' . $v[1];
+													$path2 = $_SERVER['DOCUMENT_ROOT'].'/files/'.preg_replace ('/\./ui', $size.'.', $row['path']);
+													if (!is_file($path2)) {
+														resizeimg ($_SERVER['DOCUMENT_ROOT'].'/files/'.$row['path'], $path2, $size);
+													}
+												}
+												$ret .= '/files/'.translitPath ($row['nam'], $row['path'], $size);
+											}
 											break;
 										case 'filename':
 											$row = $con->query("select * from {$pr}files where id='".getVars($vars, $v[0])."';")->fetch();
@@ -582,7 +637,7 @@ $debug = false;
 												$p = [];
 												if (isset ($session['lastform'])) $p = add_arr ($p, $session['lastform']);
 												$p = add_arr ($p, $input);
-												$p['id'] = $elem['id'];
+												$p['elem_id'] = $elem['id'];
 												$spoiler = '';
 												if (isset ($v[1])) $spoiler = getVars ($vars, $v[1]);
 												$p['spoiler'] = $spoiler;
