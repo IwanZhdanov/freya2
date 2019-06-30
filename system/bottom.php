@@ -8,7 +8,29 @@
 		die();
 	}
 	
+	
+	if (!$html_code && !$body) {
+		header($_SERVER['SERVER_PROTOCOL']." 404 Not Found");
+		$elem = $con->query("select * from {$data['mysql']['pref']}_struct where alias='404';")->fetch();
+		$dat = $con->query("select * from {$data['mysql']['pref']}_data where elem='{$elem['id']}' and var in (select id from {$data['mysql']['pref']}_columns where caption='HTML');")->fetch();
+		if ($dat) {
+			if (is_array ($input)) foreach ($input as $vr => $vl) {
+				addVars ($vars, $vr, $vl, ['get']);
+			}
+			if (isset ($input['p'])) addVars ($vars, 'pageId', ($input['p']+1));
+			addVars ($vars, 'template.id', $elem['id']);
+			addVars ($vars, 'title', $elem['caption'], ['page']);
+			addVarsFrom ($vars, $elem['id'], ['page']);
+			$html_code = $dat['value'];
+			$html_code = applyTemplates ($html_code, $vars);
+			$html_code = applyWiki ($html_code); 
+		}
+	}
 	if ($html_code) $x = $html_code; else {
+		if (!$body) {
+			$body = '<p>Ошибка 404. Страница не найдена.</p>';
+			$body .= '<p><a href="/">Вернуться на главную</a></p>';
+		}
 		ob_start();
 ?>
 <!DOCTYPE html>

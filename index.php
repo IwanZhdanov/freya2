@@ -35,7 +35,6 @@
 	}
 	$input = add_arr ($links, $input);
 	$needCahce = false;
-	$html_code = 'Freya v2.0<br />';
 	$vars = [];
 	$struct = isset ($input['page']) ? $input['page'] : 'index';
 	
@@ -89,6 +88,6 @@
 	$html_code = applyTemplates ($html_code, $vars);
 	$html_code = applyWiki ($html_code); 
 	
-	if (!$needCache) $cache_hash = '';
+	if (!isset ($needCache) || !$needCache) $cache_hash = '';
 	require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
 

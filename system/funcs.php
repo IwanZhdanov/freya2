@@ -589,7 +589,6 @@ $debug = false;
 											addVars ($vars, $v[0], countVars ($vars, $vv[1]));
 											break;
 										case 'var':
-										case 'value':
 											$varname = countVars ($vars, $vv[1]);
 											addVars ($vars, $v[0], countVars ($vars, $varname));
 											break;
