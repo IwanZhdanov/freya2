@@ -258,6 +258,11 @@
 			if ($n !== true) $ret .= '=' . $n;
 			$comma = '&';
 		}
+		if (!$ret) {
+			$ret = $_SERVER['REQUEST_URI'];
+			$a = mb_strpos ($ret, '?');
+			if ($a !== false) $ret = mb_substr($ret, 0, $a);
+		}
 		return $ret;
 	}
 	
@@ -359,7 +364,6 @@
 		if ($type == 1) imagegif($thumb, $dest);
 		if ($type == 2) imagejpeg($thumb, $dest);
 		if ($type == 3) imagepng($thumb, $dest);
-		die();////
 	}
 		
 	function applyCode ($html, &$vars) {
@@ -405,6 +409,7 @@ $debug = false;
 								$foreachHID = getVars ($vars, $v[0]);
 								if (isset ($v[1])) $foreachLimit = getVars($vars, $v[1]); else $foreachLimit = false;
 								if (isset ($v[2])) $foreachSkip = getVars($vars, $v[2]); else $foreachSkip = 0;
+								if (isset ($v[3])) $foreachCond = getVars($vars, $v[3]); else $foreachCond = '1';
 								$foreachAsc = true;
 								$elem = $con->query("select * from {$pr}struct where hid='$foreachHID'")->fetch();
 								if ($elem) inCacheAdd ($elem['id']);
@@ -421,6 +426,7 @@ $debug = false;
 								$foreachHID = getVars ($vars, $v[0]);
 								if (isset ($v[1])) $foreachLimit = getVars($vars, $v[1]); else $foreachLimit = false;
 								if (isset ($v[2])) $foreachSkip = getVars($vars, $v[2]); else $foreachSkip = 0;
+								if (isset ($v[3])) $foreachCond = getVars($vars, $v[3]); else $foreachCond = '1';
 								$foreachAsc = false;
 								$elem = $con->query("select * from {$pr}struct where hid='$foreachHID'")->fetch();
 								if ($elem) inCacheAdd ($elem['id']);
@@ -438,7 +444,31 @@ $debug = false;
 								$foreach .= '}}';
 								$elem = $con->query("select * from {$pr}struct where hid='{$foreachHID}';")->fetch();
 								if ($foreachAsc) $sort = 'sort'; else $sort = '-sort';
-								$qua = $con->query("select * from {$pr}struct where parent='{$elem['id']}'")->rowCount();
+								$res = $con->query("select * from {$pr}struct where parent='{$elem['id']}' order by $sort;");
+								$N = 0;
+								$qua = 0;
+								if ($foreachLimit) {
+									$skip = $foreachSkip * $foreachLimit;
+									$limit = $foreachLimit;
+								} else {
+									$skip = 0;
+									$limit = -1;
+								}
+								while ($row = $res->fetch()) {
+									addVars ($vars, 'LineID', $N);
+									addVarsFrom ($vars, $row['id'], ['foreach']);
+									if (isTrue ($vars, $foreachCond)) {
+										$qua++;
+										if ($skip > 0) $skip--; else {
+											if ($limit != 0) {
+												$N++;
+												$ret .= applyCode ($foreach, $vars);
+												if ($limit > 0) $limit--;
+											}
+										}
+									}
+								}
+								$foreach = '';
 								if ($foreachLimit) {
 									$i = $qua / $foreachLimit;
 									$pageQ = intval ($i);
@@ -464,20 +494,7 @@ $debug = false;
 									addVars ($vars, 'pageQ', $pageQ);
 									addVars ($vars, 'pagination', $pag);
 									$limit = '';
-									if ($foreachLimit) {
-										$skip = $foreachSkip * $foreachLimit;
-										$limit .= ' limit '.$skip.', '.$foreachLimit;
-									}
 								} else $limit = '';
-								$res = $con->query("select * from {$pr}struct where parent='{$elem['id']}' order by $sort$limit;");
-								$N = 0;
-								while ($row = $res->fetch()) {
-									$N++;
-									addVars ($vars, 'LineID', $N);
-									addVarsFrom ($vars, $row['id'], ['foreach']);
-									$ret .= applyCode ($foreach, $vars);
-								}
-								$foreach = '';
 							} else $foreach .= ' endforeach; ';
 						}
 						break;
@@ -883,7 +900,7 @@ $debug = false;
 		stPush ($st, $res);
 	}
 	function countVars ($vars, $str) {
-		preg_match_all('/[a-z][a-z0-9._]*|[0-9][0-9.,]*|[^ ]+?/ui', $str, $r);
+		preg_match_all('/[a-z][a-z0-9._]*|[0-9][0-9.,]*|[^ 0-9a-z.,_]+/ui', $str, $r);
 		$st1 = [0];
 		$st2 = [0];
 		foreach ($r[0] as $i) {
