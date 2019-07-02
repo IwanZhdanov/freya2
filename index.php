@@ -7,8 +7,15 @@
 		while ($row = $res->fetch()) {
 			if ($row['value'] == $input['lang']) $lang = $row['value'];
 		}
-		if ($lang) $session['lang'] = $lang;
-		$direct = makeLink($_GET, ['lang'=>0], ['lang'=>0]);
+		if ($lang) {
+			$session['lang'] = $lang;
+			$chlang = '/'.$lang;
+		}
+		$link = makeLink($_GET, ['lang'=>0], ['lang'=>0]);
+		$x = explode ('/', $link);
+		$row2 = $con->query("select * from {$data['mysql']['pref']}_data where elem in (select id from {$data['mysql']['pref']}_struct where parent in (select id from {$data['mysql']['pref']}_struct where alias='multilang')) and var in (select id from {$data['mysql']['pref']}_columns where vrname = 'lang') and value = '{$x[1]}' order by sort limit 0,1;")->fetch();
+		if ($row2) $link = str_replace ('/'.$x[1].'/', $chlang.'/', $link);
+		$direct = $link;
 		require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
 	}
 	if (!isset ($session['lang']) || !$session['lang']) {
@@ -43,11 +50,29 @@
 		
 	preg_match_all ('/\/([^\/]+)/ui', $_SERVER['REQUEST_URI'], $x);
 	$links = [];
-	if ($q = count ($x[0])) {
-		if ($q >= 1) $links['page'] = $x[1][0];
-		if ($q >= 2) $links['id'] = $x[1][1];
-		for ($a=1;$a<=$q;$a++) $links['par'.$a] = $x[1][$a-1];
+	$row = $con->query("select * from {$data['mysql']['pref']}_data where elem in (select id from {$data['mysql']['pref']}_struct where parent in (select id from {$data['mysql']['pref']}_struct where alias='multilang')) and var in (select id from {$data['mysql']['pref']}_columns where vrname = 'lang') order by sort limit 0,1;")->fetch();
+	$links['lang'] = '';
+	if ($q = count ($x[0])) {	
+		if ($row) {
+			if ($q >= 1) $links['lang'] = $x[1][0];
+			if ($q >= 2) $links['page'] = $x[1][1];
+			if ($q >= 3) $links['id'] = $x[1][2];
+			for ($a=1;$a<=$q-1;$a++) $links['par'.$a] = $x[1][$a];
+			$row2 = $con->query("select * from {$data['mysql']['pref']}_data where elem in (select id from {$data['mysql']['pref']}_struct where parent in (select id from {$data['mysql']['pref']}_struct where alias='multilang')) and var in (select id from {$data['mysql']['pref']}_columns where vrname = 'lang') and value = '{$links['lang']}' order by sort limit 0,1;")->fetch();
+			if (!$row2) $links['lang'] = '';
+		} else {
+			if ($q >= 1) $links['page'] = $x[1][0];
+			if ($q >= 2) $links['id'] = $x[1][1];
+			for ($a=1;$a<=$q;$a++) $links['par'.$a] = $x[1][$a-1];
+		}
 	}
+	if (!$links['lang'] && $row) {
+		$lg = $row['value'];
+		if (isset ($session['lang'])) $lg = $session['lang'];
+		$direct = '/'.$lg.$_SERVER['REQUEST_URI'];
+		require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
+	}
+	$session['lang'] = $links['lang'];
 	$input = add_arr ($links, $input);
 	$needCahce = false;
 	$vars = [];
