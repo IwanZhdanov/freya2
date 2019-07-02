@@ -19,6 +19,7 @@
 		$user = [];
 	}
 	$title = 'Фрейя v2.0';
+	$cms_version = 'v 2.0.702';
 	$direct = '';
 	$err = '';
 	$msg = '';

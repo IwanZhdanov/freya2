@@ -4,7 +4,8 @@
 ?>
 <div class="row">
 	<div class="col-12" style="text-align: right; background:black; color: white;">
-		<a href="/" style="color:white;">Сайт</a>, 
+		<a href="/" style="color:white;">Сайт: <?=$_SERVER['HTTP_HOST']?></a> --
+		CMS Freya <?=$cms_version?>,
 		[<?=$user['login']?>]
 		<a href="/user/logout.php" style="color:white;">Выход</a> 
 	</div>
