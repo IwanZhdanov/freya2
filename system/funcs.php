@@ -455,13 +455,14 @@ $debug = false;
 									$limit = -1;
 								}
 								while ($row = $res->fetch()) {
-									addVars ($vars, 'LineID', $N);
 									addVarsFrom ($vars, $row['id'], ['foreach']);
 									if (isTrue ($vars, $foreachCond)) {
 										$qua++;
 										if ($skip > 0) $skip--; else {
 											if ($limit != 0) {
 												$N++;
+												addVars ($vars, 'LineID', $N);
+												addVars ($vars, 'ItemID', $qua);
 												$ret .= applyCode ($foreach, $vars);
 												if ($limit > 0) $limit--;
 											}
@@ -669,7 +670,7 @@ $debug = false;
 											}
 											break;
 										default:
-											$ret .= getVars ($vars, $y[1][$b]);
+											$ret .= applyCode (getVars ($vars, $y[1][$b]), $vars);
 									}
 							}
 						}
@@ -754,7 +755,10 @@ $debug = false;
 				$vl = preg_replace ('/\'/', '', $vl);
 				$vl = preg_replace ('/\"/', '', $vl);
 				if (!isset ($add[$vr])) $add[$vr] = $vl;
-				if (strpos ($vr, '_q') === false) $add[$vr.'_q'] = 'concat('.de_quotes ($st, "'\"", ', ').')';
+				if (strpos ($vr, '_q') === false) {
+					$add[$vr.'_q'] = 'concat('.de_quotes ($st, "'\"", ', ').')';
+					$add[$vr.'_qs'] = $st;
+				}
 			}
 		}
 		return $add;

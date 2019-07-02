@@ -878,6 +878,23 @@
 						clearColumns();
 					} else if ($vl == '!NOP!') {
 					} else {
+						if (is_array ($vl)) {
+							if (isset ($p['dat'][$vr.'_qs'])) $vl = $p['dat'][$vr.'_qs'];
+							$vl_first = '';
+							$vl_q = 0;
+							$res = $con->query("select * from {$pr}data where elem in (select id from {$pr}struct where parent in (select id from {$pr}struct where alias='multilang')) and var in (select id from {$pr}columns where vrname = 'lang') order by sort;");
+							$combovl = '';
+							while ($row = $res->fetch()) if (isset ($vl[$row['value'].'_qs']) && $vl[$row['value'].'_qs']) {
+								if (!$vl_first) $vl_first = $vl[$row['value'].'_qs'];
+								$vl_q ++;
+								$combovl .= '{{ set ('.$row['value'].', '.$row['value'].') if (lang = '.$row['value'].') }}';
+								$combovl .= $vl[$row['value'].'_qs'];
+								$combovl .= '{{ endif set ('.$row['value'].', '.$row['value'].') }}';
+							}
+							unset ($vl);
+							if ($vl_q > 1) $vl = $combovl; else $vl = $vl_first;
+							$vl = 'concat('.de_quotes ($vl, '\'"', ', ').')';
+						}
 						//$variable = $con->query("select * from {$pr}columns where id='{$vr}';")->fetch();
 						//if ($variable['caption'] == 'HTML' && $_POST['dat'][$vr]) $value = $_POST['dat'][$vr]; else $value = $vl;
 						$dat = $con->query("select * from {$pr}data where elem='{$p['id']}' and var='$vr';")->fetch();
@@ -900,6 +917,9 @@
 				'fields'=>[],
 				'submit'=>'?act=struct_edit_vars',
 			];
+			$res = $con->query("select * from {$pr}data where elem in (select id from {$pr}struct where parent in (select id from {$pr}struct where alias='multilang')) and var in (select id from {$pr}columns where vrname = 'lang') order by sort;");
+			$langs = [];
+			while ($row = $res->fetch()) $langs[] = $row['value'];
 			$res = $con->query("select * from {$pr}columns where groupid='{$elem['parent']}' order by  sort;");
 			while ($row = $res->fetch()) {
 				$dat = $con->query("select * from {$pr}data where elem='{$p['id']}' and var='{$row['id']}';")->fetch();
@@ -909,8 +929,19 @@
 					$optA = $con->query("select * from {$pr}struct where parent in (select id from {$pr}struct where hid='{$row['typ2']}') order by sort;");
 					while ($optB = $optA->fetch()) $opts[$optB['hid']] = $optB['caption'];
 					$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value, 'opts'=>$opts];
-				} else
-				$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value];
+				} else {
+					if (!$row['typ2']) {
+						$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value];
+					} else {
+						$thisvalue = $value;
+						foreach ($langs as $langId) {
+							preg_match ('/\{\{ set \('.$langId.', '.$langId.'\) if \(lang = '.$langId.'\) \}\}((?:.|\r|\n)*?)\{\{ endif set \('.$langId.', '.$langId.'\) \}\}/ui', $value, $x);
+							if (isset ($x) && isset ($x[1])) $thisvalue = $x[1];
+							$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ], '.$langId, 'dat['.$row['id'].']['.$langId.']', $row['typ'], $thisvalue];
+							$thisvalue = '';
+						}
+					}
+				}
 			}
 			if (count ($form['fields'])) echo makeForm ($form);
 		}
@@ -939,7 +970,8 @@
 			}
 			if (!$err) {
 				if ($p['field'] == 0) {
-					$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ, typ2, format, keep) values ('{$p['id']}', {$p['caption_q']}, '{$p['vrname']}', '{$p['typ']}', '{$p['typ2']}', {$p['format_q']}, '{$p['keep']}');");
+					if ($p['typ'] == 'select') $typ2 = $p['typ2']; else $typ2 = $p['typ3'];
+					$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ, typ2, format, keep) values ('{$p['id']}', {$p['caption_q']}, '{$p['vrname']}', '{$p['typ']}', '{$typ2}', {$p['format_q']}, '{$p['keep']}');");
 				} else
 				if ($p['keep'] == 'del') {
 					$con->exec ("delete from {$pr}columns where id='{$p['field']}';");
@@ -959,7 +991,8 @@
 						}
 						$con->exec ("update {$pr}columns set sort='$last' where id='{$curr['id']}';");
 					}
-					$con->exec("update {$pr}columns set caption = {$p['caption_q']}, vrname = '{$p['vrname']}', typ='{$p['typ']}', typ2='{$p['typ2']}', format={$p['format_q']}, def={$p['def_q']}, keep='{$p['keep']}' where id='{$p['field']}';");
+					if ($p['typ'] == 'select') $typ2 = $p['typ2']; else $typ2 = $p['typ3'];
+					$con->exec("update {$pr}columns set caption = {$p['caption_q']}, vrname = '{$p['vrname']}', typ='{$p['typ']}', typ2='{$typ2}', format={$p['format_q']}, def={$p['def_q']}, keep='{$p['keep']}' where id='{$p['field']}';");
 				}
 				inCacheDel ($p['id']);
 				normal ($pr.'data');
@@ -999,7 +1032,8 @@
 						['Название поля','caption','text'],
 						['Имя переменной','vrname','text'],
 						['Тип','typ','select', 'opts'=>$types],
-						['Выбор из','typ2','text'],
+						['Выбор из','typ2','text','if'=>'typ=="select"'],
+						['Мультиязычный','typ3','select', $row['typ2'],'if'=>'typ!="select"','opts'=>['Нет','Да']],
 						['Формат','format','text'],
 						['По умолчанию','def','text'],
 						['Сортировать','move','select','opts'=>$move],
@@ -1017,7 +1051,8 @@
 					['Название поля','caption','text'],
 					['Имя переменной','vrname','text'],
 					['Тип','typ','select', 'opts'=>$types],
-					['Выбор из','typ2','text'],
+					['Выбор из','typ2','text','if'=>'typ=="select"'],
+					['Мультиязычный','typ3','select','if'=>'typ!="select"','opts'=>['Нет','Да']],
 					['Формат','format','text'],
 					['По умолчнию','def','text'],
 					['Хранить пустое','keep','select', 1, 'opts'=>[0=>'Нет','1'=>'Да']],

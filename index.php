@@ -1,8 +1,23 @@
 <?php
 	require $_SERVER['DOCUMENT_ROOT'].'/system/top.php';
 
+	if ((!isset ($_POST) || $_POST==[]) && isset($input['lang'])) {
+		$res = $con->query("select * from {$data['mysql']['pref']}_data where elem in (select id from {$data['mysql']['pref']}_struct where parent in (select id from {$data['mysql']['pref']}_struct where alias='multilang')) and var in (select id from {$data['mysql']['pref']}_columns where vrname = 'lang') order by sort;");
+		$lang = '';
+		while ($row = $res->fetch()) {
+			if ($row['value'] == $input['lang']) $lang = $row['value'];
+		}
+		if ($lang) $session['lang'] = $lang;
+		$direct = makeLink($_GET, ['lang'=>0], ['lang'=>0]);
+		require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
+	}
+	if (!isset ($session['lang']) || !$session['lang']) {
+		$row = $con->query("select * from {$data['mysql']['pref']}_data where elem in (select id from {$data['mysql']['pref']}_struct where parent in (select id from {$data['mysql']['pref']}_struct where alias='multilang')) and var in (select id from {$data['mysql']['pref']}_columns where vrname = 'lang') order by sort limit 0,1;")->fetch();
+		if ($row) $session['lang'] = $row['value']; else $session['lang'] = '';
+	}
+
 			if (!isset ($_POST) || $_POST==[]) {
-				$cache_hash = hash('SHA256', $_SERVER['HTTP_HOST'].' -> '.$_SERVER['REQUEST_URI']);
+				$cache_hash = hash('SHA256', $_SERVER['HTTP_HOST'].' -> '.$_SERVER['REQUEST_URI'].' -> '.$session['lang']);
 				$cache_filename = $_SERVER['DOCUMENT_ROOT'].'/cache/'.$cache_hash.'.html';
 				if (is_file($cache_filename)) {
 
@@ -25,7 +40,7 @@
 					die();
 				}
 			}
-
+		
 	preg_match_all ('/\/([^\/]+)/ui', $_SERVER['REQUEST_URI'], $x);
 	$links = [];
 	if ($q = count ($x[0])) {
@@ -46,6 +61,7 @@
 	//	if ($elem || $struct == 'index') break;
 	//	$struct = 'index';
 	//}
+	addVars ($vars, 'lang', $session['lang'], ['page','get']);
 	if ($elem && grantedForMe($elem['id'], VIEW_PAGE)) {
 		$dat = $con->query("select * from {$data['mysql']['pref']}_data where elem='{$elem['id']}' and var in (select id from {$data['mysql']['pref']}_columns where caption='HTML');")->fetch();
 		if ($dat) {
