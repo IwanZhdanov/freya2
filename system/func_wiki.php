@@ -91,8 +91,8 @@
 		return $ret;
 	}
 	
-	function applyWiki ($txt) {
-		if (!preg_match('/<html/ui', $txt)) return $txt;
+	function applyWiki ($txt, $force=false) {
+		if (!$force && !preg_match('/<html/ui', $txt)) return $txt;
 		$ret = '';
 		while (true) {
 			$a = mb_strpos ($txt, '<nowiki>');

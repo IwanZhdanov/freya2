@@ -23,6 +23,7 @@
 			addVars ($vars, 'priorityChildren', '0.5');
 			addVars ($vars, 'changefreqChildren', 'daily');
 			$code = applyCode ($row2['value'], $vars);
+			$code = applyWiki ($code, true);
 			$list['/'.$row['alias'].'/'] = [getVars($vars,'changefreqSelf'),getVars($vars,'prioritySelf'),$row['lastmod']];
 			preg_match_all ('/\/'.$row['alias'].'\/[^\'" >]*/ui', $code, $x);
 			$q = count ($x[0]);
