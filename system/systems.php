@@ -7,6 +7,11 @@
 	define ('EDIT_COLUMN_LIST', 64);
 	define ('CHANGE_GRANTS', 128);
 
+	function getFormCaption ($x) {
+		$x = str_replace ('}}{{', '}} / {{', $x);
+		$x = preg_replace ('/\{\{.*?\}\}/ui', '', $x);
+		return $x;
+	}
 
 	function getGrantsForMe ($id) {
 		if (!$id) $id = 0;
@@ -930,14 +935,14 @@
 					while ($optB = $optA->fetch()) $opts[$optB['hid']] = $optB['caption'];
 					$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value, 'opts'=>$opts];
 				} else {
-					if (!$row['typ2']) {
-						$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value];
+					if ($row['typ2'] >= 1050 || ($row['typ2'] & 1) == 0) {
+						$form['fields'][] = [getFormCaption($row['caption']).' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value];
 					} else {
 						$thisvalue = $value;
 						foreach ($langs as $langId) {
 							preg_match ('/\{\{ set \('.$langId.', '.$langId.'\) if \((?:get\.)?lang = '.$langId.'\) \}\}((?:.|\r|\n)*?)\{\{ endif set \('.$langId.', '.$langId.'\) \}\}/ui', $value, $x);
 							if (isset ($x) && isset ($x[1])) $thisvalue = $x[1];
-							$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ], '.$langId, 'dat['.$row['id'].']['.$langId.']', $row['typ'], $thisvalue];
+							$form['fields'][] = [getFormCaption($row['caption']).' [ '.$row['vrname'].' ], '.$langId, 'dat['.$row['id'].']['.$langId.']', $row['typ'], $thisvalue];
 							$thisvalue = '';
 						}
 					}
@@ -1035,15 +1040,10 @@
 				foreach ($moves as $m => $n) if ($m != $row['id']) {
 					if ($n['sort'] < $row['sort']) $s = 'Вверх, перед ';
 					 else $s = 'Вниз, после ';
-					$form_caption = $n['caption'];
-					$form_caption = str_replace ('}}{{', '}} / {{', $form_caption);
-					$form_caption = preg_replace ('/\{\{.*?\}\}/ui', '', $form_caption);
-					$s .= $form_caption;
+					$s .= getFormCaption ($n['caption']);
 					$move[$m] = $s;
 				}
-				$form_caption = $row['caption'];
-				$form_caption = str_replace ('}}{{', '}} / {{', $form_caption);
-				$form_caption = preg_replace ('/\{\{.*?\}\}/ui', '', $form_caption);
+				$form_caption = getFormCaption ($row['caption']);
 				$form = [
 					'caption'=>'Поле: '.$form_caption,
 					'defaults'=>$row,
@@ -1052,7 +1052,7 @@
 					'submit'=>'?act=struct_edit_fields',
 					'spoiler'=>'Изменить поле: '.$form_caption,
 				];
-				if ($row['typ2'] != 1) {
+				if ($row['typ2'] > 1050 || ($row['typ2'] & 2) == 0) {
 					$form['fields'][] = ['Название поля','caption','text'];
 				} else {
 					$thisvalue = $row['caption'];
@@ -1070,7 +1070,7 @@
 				$form['fields'][] = ['Имя переменной','vrname','text'];
 				$form['fields'][] = ['Тип','typ','select', 'opts'=>$types];
 				$form['fields'][] = ['Выбор из','typ2','text','if'=>'typ=="select"'];
-				$form['fields'][] = ['Мультиязычный','typ3','select', $row['typ2'],'if'=>'typ!="select"','opts'=>['Нет','Да']];
+				$form['fields'][] = ['Мультиязычный','typ3','select', $row['typ2'],'if'=>'typ!="select"','opts'=>['Нет', 'Да, только данные', 'Да, только заголовки', 'Да, полностью']];
 				$form['fields'][] = ['Формат','format','text'];
 				$form['fields'][] = ['По умолчанию','def','text'];
 				$form['fields'][] = ['Сортировать','move','select','opts'=>$move];
@@ -1085,7 +1085,7 @@
 					['Имя переменной','vrname','text'],
 					['Тип','typ','select', 'opts'=>$types],
 					['Выбор из','typ2','text','if'=>'typ=="select"'],
-					['Мультиязычный','typ3','select','if'=>'typ!="select"','opts'=>['Нет','Да']],
+					['Мультиязычный','typ3','select','if'=>'typ!="select"','opts'=>['Нет', 'Да, только данные', 'Да, только заголовки', 'Да, полностью']],
 					['Формат','format','text'],
 					['По умолчнию','def','text'],
 					['Хранить пустое','keep','select', 1, 'opts'=>[0=>'Нет','1'=>'Да']],
