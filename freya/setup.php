@@ -1,7 +1,13 @@
 <?php
 	require $_SERVER['DOCUMENT_ROOT'].'/system/top.php';
+	
 	if (is_file ($_SERVER['DOCUMENT_ROOT'].'/settings.php')) require $_SERVER['DOCUMENT_ROOT'].'/settings.php';
 	if (isset ($data)) {
+		// Корректировка базы данных
+		$q = $con->query("show columns from {$data['mysql']['pref']}_columns where Field = 'caption' and Type = 'char(100)';")->rowCount();
+		if ($q) $con->exec ("alter table {$data['mysql']['pref']}_columns change caption caption text;");
+		
+		// Запрет на переустановку
 		header ('Location: /freya/');
 		die();
 	}
@@ -43,7 +49,7 @@
 				foreach ($tables as $tab) $con->exec ('drop table '.$def['pref'].'_'.$tab.';');
 			}
 			$con->exec ("create table {$def['pref']}_cache (id int primary key auto_increment, elem int, hash char(100));");
-			$con->exec ("create table {$def['pref']}_columns (id int primary key auto_increment, sort int, groupid int,  caption char(100), vrname char(50), typ char(20), typ2 char(20), format char(100), def char(200), keep int);");
+			$con->exec ("create table {$def['pref']}_columns (id int primary key auto_increment, sort int, groupid int,  caption text, vrname char(50), typ char(20), typ2 char(20), format char(100), def char(200), keep int);");
 			$con->exec ("create table {$def['pref']}_data (id int primary key auto_increment, sort int, elem int, var int, value text);");
 			$con->exec ("create table {$def['pref']}_files (id int primary key auto_increment, col int, elem int, nam char(200), path char(200));");
 			$con->exec ("create table {$def['pref']}_rights (id int primary key auto_increment, basis int, uid int, grants int);");
