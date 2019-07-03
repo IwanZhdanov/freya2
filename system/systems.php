@@ -887,7 +887,7 @@
 							while ($row = $res->fetch()) if (isset ($vl[$row['value'].'_qs']) && $vl[$row['value'].'_qs']) {
 								if (!$vl_first) $vl_first = $vl[$row['value'].'_qs'];
 								$vl_q ++;
-								$combovl .= '{{ set ('.$row['value'].', '.$row['value'].') if (lang = '.$row['value'].') }}';
+								$combovl .= '{{ set ('.$row['value'].', '.$row['value'].') if (get.lang = '.$row['value'].') }}';
 								$combovl .= $vl[$row['value'].'_qs'];
 								$combovl .= '{{ endif set ('.$row['value'].', '.$row['value'].') }}';
 							}
@@ -935,7 +935,7 @@
 					} else {
 						$thisvalue = $value;
 						foreach ($langs as $langId) {
-							preg_match ('/\{\{ set \('.$langId.', '.$langId.'\) if \(lang = '.$langId.'\) \}\}((?:.|\r|\n)*?)\{\{ endif set \('.$langId.', '.$langId.'\) \}\}/ui', $value, $x);
+							preg_match ('/\{\{ set \('.$langId.', '.$langId.'\) if \((?:get\.)?lang = '.$langId.'\) \}\}((?:.|\r|\n)*?)\{\{ endif set \('.$langId.', '.$langId.'\) \}\}/ui', $value, $x);
 							if (isset ($x) && isset ($x[1])) $thisvalue = $x[1];
 							$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ], '.$langId, 'dat['.$row['id'].']['.$langId.']', $row['typ'], $thisvalue];
 							$thisvalue = '';
@@ -949,7 +949,7 @@
 	}
 		
 	function sysShowStructFields ($p, $mode='') {
-		global $con, $data, $err;
+		global $con, $data, $err, $vars;
 		if (!grantedForMe ($p['id'], EDIT_COLUMN_LIST)) return;
 		$pr = $data['mysql']['pref'].'_';
 		$elem = $con->query("select * from {$pr}struct where id = '{$p['id']}';")->fetch();
@@ -969,9 +969,24 @@
 				}
 			}
 			if (!$err) {
+				if ($p['typ'] == 'select') $typ2 = $p['typ2']; else $typ2 = $p['typ3'];
+				if (is_array ($p['caption'])) {
+					$vl_first = '';
+					$vl_q = 0;
+					$reslang = $con->query("select * from {$pr}data where elem in (select id from {$pr}struct where parent in (select id from {$pr}struct where alias='multilang')) and var in (select id from {$pr}columns where vrname = 'lang') order by sort;");
+					$combovl = '';
+					while ($rowlang = $reslang->fetch()) if (isset ($p['caption'][$rowlang['value'].'_qs']) && $p['caption'][$rowlang['value'].'_qs']) {
+						if (!$vl_first) $vl_first = $p['caption'][$rowlang['value'].'_qs'];
+						$vl_q ++;
+						$combovl .= '{{ set ('.$rowlang['value'].', '.$rowlang['value'].') if (get.lang = '.$rowlang['value'].') }}';
+						$combovl .= $p['caption'][$rowlang['value'].'_qs'];
+						$combovl .= '{{ endif set ('.$rowlang['value'].', '.$rowlang['value'].') }}';
+					}
+					if ($vl_q > 1) $caption = $combovl; else $caption = $vl_first;
+					$caption = 'concat('.de_quotes ($caption, '\'"', ', ').')';
+				} else $caption = $p['caption_q'];
 				if ($p['field'] == 0) {
-					if ($p['typ'] == 'select') $typ2 = $p['typ2']; else $typ2 = $p['typ3'];
-					$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ, typ2, format, keep) values ('{$p['id']}', {$p['caption_q']}, '{$p['vrname']}', '{$p['typ']}', '{$typ2}', {$p['format_q']}, '{$p['keep']}');");
+					$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ, typ2, format, keep) values ('{$p['id']}', $caption, '{$p['vrname']}', '{$p['typ']}', '{$typ2}', {$p['format_q']}, '{$p['keep']}');");
 				} else
 				if ($p['keep'] == 'del') {
 					$con->exec ("delete from {$pr}columns where id='{$p['field']}';");
@@ -991,8 +1006,7 @@
 						}
 						$con->exec ("update {$pr}columns set sort='$last' where id='{$curr['id']}';");
 					}
-					if ($p['typ'] == 'select') $typ2 = $p['typ2']; else $typ2 = $p['typ3'];
-					$con->exec("update {$pr}columns set caption = {$p['caption_q']}, vrname = '{$p['vrname']}', typ='{$p['typ']}', typ2='{$typ2}', format={$p['format_q']}, def={$p['def_q']}, keep='{$p['keep']}' where id='{$p['field']}';");
+					$con->exec("update {$pr}columns set caption = $caption, vrname = '{$p['vrname']}', typ='{$p['typ']}', typ2='{$typ2}', format={$p['format_q']}, def={$p['def_q']}, keep='{$p['keep']}' where id='{$p['field']}';");
 				}
 				inCacheDel ($p['id']);
 				normal ($pr.'data');
@@ -1021,27 +1035,46 @@
 				foreach ($moves as $m => $n) if ($m != $row['id']) {
 					if ($n['sort'] < $row['sort']) $s = 'Вверх, перед ';
 					 else $s = 'Вниз, после ';
-					$s .= $n['caption'];
+					$form_caption = $n['caption'];
+					$form_caption = str_replace ('}}{{', '}} / {{', $form_caption);
+					$form_caption = preg_replace ('/\{\{.*?\}\}/ui', '', $form_caption);
+					$s .= $form_caption;
 					$move[$m] = $s;
 				}
+				$form_caption = $row['caption'];
+				$form_caption = str_replace ('}}{{', '}} / {{', $form_caption);
+				$form_caption = preg_replace ('/\{\{.*?\}\}/ui', '', $form_caption);
 				$form = [
-					'caption'=>'Поле: '.$row['caption'],
+					'caption'=>'Поле: '.$form_caption,
 					'defaults'=>$row,
 					'hidden'=>['id'=>$p['id'], 'field'=>$row['id']],
-					'fields'=>[
-						['Название поля','caption','text'],
-						['Имя переменной','vrname','text'],
-						['Тип','typ','select', 'opts'=>$types],
-						['Выбор из','typ2','text','if'=>'typ=="select"'],
-						['Мультиязычный','typ3','select', $row['typ2'],'if'=>'typ!="select"','opts'=>['Нет','Да']],
-						['Формат','format','text'],
-						['По умолчанию','def','text'],
-						['Сортировать','move','select','opts'=>$move],
-						['Хранить пустое','keep','select', 'opts'=>[0=>'Нет','1'=>'Да','del'=>'УДАЛИТЬ']],
-					],
+					'fields'=>[],
 					'submit'=>'?act=struct_edit_fields',
-					'spoiler'=>'Изменить поле: '.$row['caption'],
+					'spoiler'=>'Изменить поле: '.$form_caption,
 				];
+				if ($row['typ2'] != 1) {
+					$form['fields'][] = ['Название поля','caption','text'];
+				} else {
+					$thisvalue = $row['caption'];
+					$value = $row['caption'];
+					$reslang = $con->query("select * from {$pr}data where elem in (select id from {$pr}struct where parent in (select id from {$pr}struct where alias='multilang')) and var in (select id from {$pr}columns where vrname = 'lang') order by sort;");
+					$langs = [];
+					while ($rowlang = $reslang->fetch()) $langs[] = $rowlang['value'];
+					foreach ($langs as $langId) {
+						preg_match ('/\{\{ set \('.$langId.', '.$langId.'\) if \((?:get\.)?lang = '.$langId.'\) \}\}((?:.|\r|\n)*?)\{\{ endif set \('.$langId.', '.$langId.'\) \}\}/ui', $value, $x);
+						if (isset ($x) && isset ($x[1])) $thisvalue = $x[1];
+						$form['fields'][] = ['Название поля, '.$langId, 'caption['.$langId.']','text', $thisvalue];
+						$thisvalue = '';
+					}
+				}
+				$form['fields'][] = ['Имя переменной','vrname','text'];
+				$form['fields'][] = ['Тип','typ','select', 'opts'=>$types];
+				$form['fields'][] = ['Выбор из','typ2','text','if'=>'typ=="select"'];
+				$form['fields'][] = ['Мультиязычный','typ3','select', $row['typ2'],'if'=>'typ!="select"','opts'=>['Нет','Да']];
+				$form['fields'][] = ['Формат','format','text'];
+				$form['fields'][] = ['По умолчанию','def','text'];
+				$form['fields'][] = ['Сортировать','move','select','opts'=>$move];
+				$form['fields'][] = ['Хранить пустое','keep','select', 'opts'=>[0=>'Нет','1'=>'Да','del'=>'УДАЛИТЬ']];
 				echo makeForm ($form);
 			}
 			$form = [
