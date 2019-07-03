@@ -1052,7 +1052,7 @@
 					'submit'=>'?act=struct_edit_fields',
 					'spoiler'=>'Изменить поле: '.$form_caption,
 				];
-				if (!row['typ2'] || $row['typ2'] > 1050 || ($row['typ2'] & 2) == 0) {
+				if (!$row['typ2'] || $row['typ2'] > 1050 || ($row['typ2'] & 2) == 0) {
 					$form['fields'][] = ['Название поля','caption','text'];
 				} else {
 					$thisvalue = $row['caption'];
