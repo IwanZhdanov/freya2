@@ -935,7 +935,7 @@
 					while ($optB = $optA->fetch()) $opts[$optB['hid']] = $optB['caption'];
 					$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value, 'opts'=>$opts];
 				} else {
-					if ($row['typ2'] >= 1050 || ($row['typ2'] & 1) == 0) {
+					if (!$row['typ2'] || $row['typ2'] >= 1050 || ($row['typ2'] & 1) == 0) {
 						$form['fields'][] = [getFormCaption($row['caption']).' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value];
 					} else {
 						$thisvalue = $value;
@@ -1052,7 +1052,7 @@
 					'submit'=>'?act=struct_edit_fields',
 					'spoiler'=>'Изменить поле: '.$form_caption,
 				];
-				if ($row['typ2'] > 1050 || ($row['typ2'] & 2) == 0) {
+				if (!row['typ2'] || $row['typ2'] > 1050 || ($row['typ2'] & 2) == 0) {
 					$form['fields'][] = ['Название поля','caption','text'];
 				} else {
 					$thisvalue = $row['caption'];
