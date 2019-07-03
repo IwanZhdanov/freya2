@@ -54,6 +54,38 @@
 		$x = ob_get_clean();
 	}
 	//$x = deobfuscateHTML ($x);
+
+	// Добавляем языки во все ссылки
+	if ($session['lang'] && strpos ($_SERVER['REQUEST_URI'], '/freya/') === false) {
+		$curr = $_SERVER['REQUEST_URI'];
+		$tmp = explode ('/', $curr);
+		if (isset ($tmp[1]) && $tmp[1] == $session['lang']) unset ($tmp[1]);
+		$curr = implode ('/', $tmp);
+		preg_match_all ('/=([\'"])?((https?:)?(\/\/'.$_SERVER['HTTP_HOST'].')?(\/'.$session['lang'].')?(\/[^\/][^\'" >]*?|\/)??(?:[?&]lang=([^\'"&>]+))?)\1/ui', $x, $arr);
+		$q = count ($arr[0]);
+		$replaceList = [];
+		for ($a=0;$a<$q;$a++) {
+			$src = $arr[0][$a];
+			if (strpos ($src, '/cache/') !== false) continue;
+			if (strpos ($src, '/static/') !== false) continue;
+			if (strpos ($src, '/files/') !== false) continue;
+			if (strpos ($src, '/freya/') !== false) continue;
+			if (strpos ($src, '/system/') !== false) continue;
+			if (strpos ($src, '/user/') !== false) continue;
+			if (isset ($arr[7][$a]) && $arr[7][$a]) {
+				$dest = $arr[3][$a].$arr[4][$a].'/'.$arr[7][$a].$curr;
+			} else {
+				$dest = $arr[3][$a].$arr[4][$a].'/'.$session['lang'].$arr[6][$a];
+			}
+			$dest = '='.$arr[1][$a].$dest.$arr[1][$a];
+			if ($arr[2][$a]) $replaceList[$src] = $dest;
+		}
+		foreach ($replaceList as $src => $dest) {
+			$x = str_replace ($src, $dest, $x);
+			//$x .= '<!-- 12345 replace '.$src.' '.$dest.' -->'."\n";
+		}
+	}
+
 	//*
 	header('Last-Modified: '. gmdate("D, d M Y H:i:s \G\M\T"));
 	if (mb_strpos ($x, 'http-equiv="Last-Modified"') === false) {
@@ -65,6 +97,7 @@
 		fclose ($f);
 	}
 	/**/
+		
 	echo $x;
 	unset ($session['lastform']);
 	if (isset ($data)) $_SESSION[$data['site']['id']] = $session;
