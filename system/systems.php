@@ -864,6 +864,7 @@
 		$ret = 'form';
 		if ($mode == 'do') {
 			$ret = 'err';
+			$time = time();
 			if (!$err) {
 				if (isset ($p['dat']) && is_array ($p['dat'])) foreach ($p['dat'] as $vr => $vl) if (strpos ($vr, '_q') == false) {
 					if (isset ($p['dat'][$vr.'_q'])) $vl = $p['dat'][$vr.'_q'];

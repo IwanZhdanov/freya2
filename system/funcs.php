@@ -600,6 +600,9 @@ $debug = false;
 												sysDelFromStruct ($p, 'do');
 											}
 											break;
+										case 'sitemap':
+											$ret .= makeSiteMap();
+											break;
 										case 'set':
 											addVars ($vars, $v[0], getVars ($vars, $vv[1]));
 											break;
@@ -807,6 +810,7 @@ $debug = false;
 	function inCacheDel ($id) {
 		global $con, $data;
 		$pr = $data['mysql']['pref'].'_';
+		$con->exec("update {$pr}struct set lastmod=".time()." where id='{$id}';");
 		$res = $con->query("select * from {$pr}cache where elem='$id';");
 		while ($row = $res->fetch()) {
 			$hash = $row['hash'];

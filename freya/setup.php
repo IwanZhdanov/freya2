@@ -6,6 +6,8 @@
 		// Корректировка базы данных
 		$q = $con->query("show columns from {$data['mysql']['pref']}_columns where Field = 'caption' and Type = 'char(100)';")->rowCount();
 		if ($q) $con->exec ("alter table {$data['mysql']['pref']}_columns change caption caption text;");
+		$q = $con->query("show columns from {$data['mysql']['pref']}_struct where Field = 'lastmod';")->rowCount();
+		if (!$q) $con->exec ("alter table {$data['mysql']['pref']}_struct add lastmod int default 0;");
 		
 		// Запрет на переустановку
 		header ('Location: /freya/');
@@ -53,7 +55,7 @@
 			$con->exec ("create table {$def['pref']}_data (id int primary key auto_increment, sort int, elem int, var int, value text);");
 			$con->exec ("create table {$def['pref']}_files (id int primary key auto_increment, col int, elem int, nam char(200), path char(200));");
 			$con->exec ("create table {$def['pref']}_rights (id int primary key auto_increment, basis int, uid int, grants int);");
-			$con->exec ("create table {$def['pref']}_struct (id int primary key auto_increment, hid char(20), sort int, parent int, caption char(200), alias char(20));");
+			$con->exec ("create table {$def['pref']}_struct (id int primary key auto_increment, hid char(20), sort int, parent int, caption char(200), alias char(20), lastmod int default 0);");
 			$con->exec ("create table {$def['pref']}_users (id int primary key auto_increment, login char(100), pass char(100), salt char(50), email char(100), stamp int, restore char(100));");
 		}
 		// Добавить админа и выдать ему права

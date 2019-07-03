@@ -7,6 +7,7 @@
 	}
 	require $_SERVER['DOCUMENT_ROOT'].'/system/funcs.php';
 	require $_SERVER['DOCUMENT_ROOT'].'/system/func_wiki.php';
+	require $_SERVER['DOCUMENT_ROOT'].'/system/func_sitemap.php';
 	require $_SERVER['DOCUMENT_ROOT'].'/system/systems.php';
 	if (isset ($data)) $con = new PDO('mysql:host='.$data['mysql']['host'].';dbname='.$data['mysql']['base'].';charset=utf8', $data['mysql']['user'], $data['mysql']['pass']);
 	
