@@ -60,19 +60,30 @@
 			for ($a=1;$a<=$q-1;$a++) $links['par'.$a] = $x[1][$a];
 			$row2 = $con->query("select * from {$data['mysql']['pref']}_data where elem in (select id from {$data['mysql']['pref']}_struct where parent in (select id from {$data['mysql']['pref']}_struct where alias='multilang')) and var in (select id from {$data['mysql']['pref']}_columns where vrname = 'lang') and value = '{$links['lang']}' order by sort limit 0,1;")->fetch();
 			if (!$row2) $links['lang'] = '';
-		} else {
-			if ($q >= 1) $links['page'] = $x[1][0];
-			if ($q >= 2) $links['id'] = $x[1][1];
-			for ($a=1;$a<=$q;$a++) $links['par'.$a] = $x[1][$a-1];
 		}
 	}
 	if (!$links['lang'] && $row) {
-		$lg = $row['value'];
-		if (isset ($session['lang'])) $lg = $session['lang'];
-		$direct = '/'.$lg.$_SERVER['REQUEST_URI'];
-		require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
+		$link = $_SERVER['REQUEST_URI'];
+		$tmp = explode ('/', $link);
+		if (!isset ($tmp[1]) || strpos ($tmp[1], '.') === false) {
+			$lg = $row['value'];
+			if (isset ($session['lang'])) $lg = $session['lang'];
+			$direct = '/'.$lg.$_SERVER['REQUEST_URI'];
+			require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
+		}
+		if ($q >= 1) $links['page'] = $x[1][0];
+		if ($q >= 2) $links['id'] = $x[1][1];
+		for ($a=1;$a<=$q;$a++) $links['par'.$a] = $x[1][$a-1];
 	}
-	$session['lang'] = $links['lang'];
+	if ($links['lang']) {
+		$session['lang'] = $links['lang'];
+	} else
+	if ($session['lang']) {
+		$links['lang'] = $session['lang'];
+	} else {
+		$session['lang'] = $row['value'];
+		$links['lang'] = $row['value'];
+	}
 	$input = add_arr ($links, $input);
 	$needCahce = false;
 	$vars = [];
