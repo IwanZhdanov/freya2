@@ -71,7 +71,7 @@
 			require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
 		}
 	}
-	if ($q && !$row) {
+	if ($q && !$links['lang']) {
 		if ($q >= 1) $links['page'] = $x[1][0];
 		if ($q >= 2) $links['id'] = $x[1][1];
 		for ($a=1;$a<=$q;$a++) $links['par'.$a] = $x[1][$a-1];
