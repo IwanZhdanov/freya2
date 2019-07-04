@@ -347,23 +347,26 @@
 		if ($q == 2) $tmpheight = $x[0][1]; else $tmpheight = $tmpwidth;
 		
 		list($width, $height, $type) = getimagesize($src);
-		if ($width == 0) echo $src;
-		$percent = 1;
-		if ($percent > ($tmpwidth / $width)) $percent = $tmpwidth / $width;
-		if ($percent > ($tmpheight / $height)) $percent = $tmpheight / $height;
-		$newwidth = $width * $percent;
-		$newheight = $height * $percent;
+		if ($width) {
+			$percent = 1;
+			if ($percent > ($tmpwidth / $width)) $percent = $tmpwidth / $width;
+			if ($percent > ($tmpheight / $height)) $percent = $tmpheight / $height;
+			$newwidth = $width * $percent;
+			$newheight = $height * $percent;
 		
-		$thumb = imagecreatetruecolor($newwidth, $newheight);
-		if ($type == 1) $source = imagecreatefromgif($src);
-		if ($type == 2) $source = imagecreatefromjpeg($src);
-		if ($type == 3) $source = imagecreatefrompng($src);
+			$thumb = imagecreatetruecolor($newwidth, $newheight);
+			if ($type == 1) $source = imagecreatefromgif($src);
+			if ($type == 2) $source = imagecreatefromjpeg($src);
+			if ($type == 3) $source = imagecreatefrompng($src);
 		
-		imagecopyresized($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+			imagecopyresized($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
 
-		if ($type == 1) imagegif($thumb, $dest);
-		if ($type == 2) imagejpeg($thumb, $dest);
-		if ($type == 3) imagepng($thumb, $dest);
+			if ($type == 1) imagegif($thumb, $dest);
+			if ($type == 2) imagejpeg($thumb, $dest);
+			if ($type == 3) imagepng($thumb, $dest);
+		} else {
+			copy ($src, $dest);
+		}
 	}
 		
 	function applyCode ($html, &$vars) {

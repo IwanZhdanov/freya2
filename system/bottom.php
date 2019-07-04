@@ -88,7 +88,7 @@
 
 	//*
 	header('Last-Modified: '. gmdate("D, d M Y H:i:s \G\M\T"));
-	if (mb_strpos ($x, 'http-equiv="Last-Modified"') === false) {
+	if (strpos($_SERVER['REQUEST_URI'], '/freya/') === false && mb_strpos ($x, 'http-equiv="Last-Modified"') === false) {
 		$x = preg_replace ('/(<head[^>]*>)/ui', '$1'."\n".'<meta http-equiv="Last-Modified" content="'.gmdate("D, d M Y H:i:s \G\M\T").'">', $x);
 	}
 	if ($cache_hash) {

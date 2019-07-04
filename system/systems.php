@@ -936,7 +936,7 @@
 					while ($optB = $optA->fetch()) $opts[$optB['hid']] = $optB['caption'];
 					$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value, 'opts'=>$opts];
 				} else {
-					if (!$row['typ2'] || $row['typ2'] >= 1050 || ($row['typ2'] & 1) == 0) {
+					if ($langs == [] || !$row['typ2'] || $row['typ2'] >= 1050 || ($row['typ2'] & 1) == 0) {
 						$form['fields'][] = [getFormCaption($row['caption']).' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value];
 					} else {
 						$thisvalue = $value;
@@ -1053,13 +1053,13 @@
 					'submit'=>'?act=struct_edit_fields',
 					'spoiler'=>'Изменить поле: '.$form_caption,
 				];
-				if (!$row['typ2'] || $row['typ2'] > 1050 || ($row['typ2'] & 2) == 0) {
+				$reslang = $con->query("select * from {$pr}data where elem in (select id from {$pr}struct where parent in (select id from {$pr}struct where alias='multilang')) and var in (select id from {$pr}columns where vrname = 'lang') order by sort;");
+				$langs = [];
+				if ($langs == [] || !$row['typ2'] || $row['typ2'] > 1050 || ($row['typ2'] & 2) == 0) {
 					$form['fields'][] = ['Название поля','caption','text'];
 				} else {
 					$thisvalue = $row['caption'];
 					$value = $row['caption'];
-					$reslang = $con->query("select * from {$pr}data where elem in (select id from {$pr}struct where parent in (select id from {$pr}struct where alias='multilang')) and var in (select id from {$pr}columns where vrname = 'lang') order by sort;");
-					$langs = [];
 					while ($rowlang = $reslang->fetch()) $langs[] = $rowlang['value'];
 					foreach ($langs as $langId) {
 						preg_match ('/\{\{ set \('.$langId.', '.$langId.'\) if \((?:get\.)?lang = '.$langId.'\) \}\}((?:.|\r|\n)*?)\{\{ endif set \('.$langId.', '.$langId.'\) \}\}/ui', $value, $x);
