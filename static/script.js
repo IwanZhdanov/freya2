@@ -76,7 +76,7 @@ function destroyScript (tag, renew) {
 		a = url.indexOf('rnd=');
 		if (a > -1) url = url.substr(0,a);
 		url += 'rnd=' + Math.random();
-		if (typeof (renew) == 'boolean') startScript (url, true);
+		if (typeof (renew) == 'boolean') ajax (url, true);
 		if (typeof (renew) == 'function') renew();
 	}
 }
