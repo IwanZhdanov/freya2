@@ -56,7 +56,7 @@
 	//$x = deobfuscateHTML ($x);
 
 	// Добавляем языки во все ссылки
-	if ($session['lang'] && strpos ($_SERVER['REQUEST_URI'], '/freya/') === false) {
+	if (isset ($session['lang']) && $session['lang'] && strpos ($_SERVER['REQUEST_URI'], '/freya/') === false) {
 		$curr = $_SERVER['REQUEST_URI'];
 		$tmp = explode ('/', $curr);
 		if (isset ($tmp[1]) && $tmp[1] == $session['lang']) unset ($tmp[1]);

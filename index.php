@@ -75,14 +75,18 @@
 		if ($q >= 2) $links['id'] = $x[1][1];
 		for ($a=1;$a<=$q;$a++) $links['par'.$a] = $x[1][$a-1];
 	}
-	if ($links['lang']) {
+	if (isset ($links['lang']) && $links['lang']) {
 		$session['lang'] = $links['lang'];
 	} else
-	if ($session['lang']) {
+	if (isset ($session['lang']) && $session['lang']) {
 		$links['lang'] = $session['lang'];
-	} else {
+	} else 
+	if (isset ($row) && $row['value']) {
 		$session['lang'] = $row['value'];
 		$links['lang'] = $row['value'];
+	} else {
+		$session['lang'] = '';
+		$links['lang'] = '';
 	}
 	$input = add_arr ($links, $input);
 	$needCahce = false;
