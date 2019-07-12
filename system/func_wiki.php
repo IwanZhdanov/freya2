@@ -93,6 +93,14 @@
 	
 	function applyWiki ($txt, $force=false) {
 		if (!$force && !preg_match('/<html/ui', $txt)) return $txt;
+		preg_match_all ('/\[\[YEAR=(\d{4})\]\]/ui', $txt, $tmp);
+		if ($tmpq = count($tmp[0])) {
+			$thisYear = intval(date('Y'));
+			for ($tmpa=0;$tmpa<$tmpq;$tmpa++) {
+				if ($tmp[1][$tmpa] == $thisYear) $tmps = $thisYear; else $tmps = $tmp[1][$tmpa].' - '.$thisYear;
+				$txt = str_replace ($tmp[0][$tmpa], $tmps, $txt);
+			}
+		}
 		$ret = '';
 		while (true) {
 			$a = mb_strpos ($txt, '<nowiki>');

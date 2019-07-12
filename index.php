@@ -52,15 +52,14 @@
 	$links = [];
 	$row = $con->query("select * from {$data['mysql']['pref']}_data where elem in (select id from {$data['mysql']['pref']}_struct where parent in (select id from {$data['mysql']['pref']}_struct where alias='multilang')) and var in (select id from {$data['mysql']['pref']}_columns where vrname = 'lang') order by sort limit 0,1;")->fetch();
 	$links['lang'] = '';
-	if ($q = count ($x[0])) {	
-		if ($row) {
-			if ($q >= 1) $links['lang'] = $x[1][0];
-			if ($q >= 2) $links['page'] = $x[1][1];
-			if ($q >= 3) $links['id'] = $x[1][2];
-			for ($a=1;$a<=$q-1;$a++) $links['par'.$a] = $x[1][$a];
-			$row2 = $con->query("select * from {$data['mysql']['pref']}_data where elem in (select id from {$data['mysql']['pref']}_struct where parent in (select id from {$data['mysql']['pref']}_struct where alias='multilang')) and var in (select id from {$data['mysql']['pref']}_columns where vrname = 'lang') and value = '{$links['lang']}' order by sort limit 0,1;")->fetch();
-			if (!$row2) $links['lang'] = '';
-		}
+	$q = count ($x[0]);
+	if ($q && $row) {
+		if ($q >= 1) $links['lang'] = $x[1][0];
+		if ($q >= 2) $links['page'] = $x[1][1];
+		if ($q >= 3) $links['id'] = $x[1][2];
+		for ($a=1;$a<=$q-1;$a++) $links['par'.$a] = $x[1][$a];
+		$row2 = $con->query("select * from {$data['mysql']['pref']}_data where elem in (select id from {$data['mysql']['pref']}_struct where parent in (select id from {$data['mysql']['pref']}_struct where alias='multilang')) and var in (select id from {$data['mysql']['pref']}_columns where vrname = 'lang') and value = '{$links['lang']}' order by sort limit 0,1;")->fetch();
+		if (!$row2) $links['lang'] = '';
 	}
 	if (!$links['lang'] && $row) {
 		$link = $_SERVER['REQUEST_URI'];
@@ -71,18 +70,24 @@
 			$direct = '/'.$lg.$_SERVER['REQUEST_URI'];
 			require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
 		}
+	}
+	if ($q && !$links['lang']) {
 		if ($q >= 1) $links['page'] = $x[1][0];
 		if ($q >= 2) $links['id'] = $x[1][1];
 		for ($a=1;$a<=$q;$a++) $links['par'.$a] = $x[1][$a-1];
 	}
-	if ($links['lang']) {
+	if (isset ($links['lang']) && $links['lang']) {
 		$session['lang'] = $links['lang'];
 	} else
-	if ($session['lang']) {
+	if (isset ($session['lang']) && $session['lang']) {
 		$links['lang'] = $session['lang'];
-	} else {
+	} else 
+	if (isset ($row) && $row['value']) {
 		$session['lang'] = $row['value'];
 		$links['lang'] = $row['value'];
+	} else {
+		$session['lang'] = '';
+		$links['lang'] = '';
 	}
 	$input = add_arr ($links, $input);
 	$needCahce = false;

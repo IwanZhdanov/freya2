@@ -347,23 +347,26 @@
 		if ($q == 2) $tmpheight = $x[0][1]; else $tmpheight = $tmpwidth;
 		
 		list($width, $height, $type) = getimagesize($src);
-		if ($width == 0) echo $src;
-		$percent = 1;
-		if ($percent > ($tmpwidth / $width)) $percent = $tmpwidth / $width;
-		if ($percent > ($tmpheight / $height)) $percent = $tmpheight / $height;
-		$newwidth = $width * $percent;
-		$newheight = $height * $percent;
+		if ($width) {
+			$percent = 1;
+			if ($percent > ($tmpwidth / $width)) $percent = $tmpwidth / $width;
+			if ($percent > ($tmpheight / $height)) $percent = $tmpheight / $height;
+			$newwidth = $width * $percent;
+			$newheight = $height * $percent;
 		
-		$thumb = imagecreatetruecolor($newwidth, $newheight);
-		if ($type == 1) $source = imagecreatefromgif($src);
-		if ($type == 2) $source = imagecreatefromjpeg($src);
-		if ($type == 3) $source = imagecreatefrompng($src);
+			$thumb = imagecreatetruecolor($newwidth, $newheight);
+			if ($type == 1) $source = imagecreatefromgif($src);
+			if ($type == 2) $source = imagecreatefromjpeg($src);
+			if ($type == 3) $source = imagecreatefrompng($src);
 		
-		imagecopyresized($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+			imagecopyresized($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
 
-		if ($type == 1) imagegif($thumb, $dest);
-		if ($type == 2) imagejpeg($thumb, $dest);
-		if ($type == 3) imagepng($thumb, $dest);
+			if ($type == 1) imagegif($thumb, $dest);
+			if ($type == 2) imagejpeg($thumb, $dest);
+			if ($type == 3) imagepng($thumb, $dest);
+		} else {
+			copy ($src, $dest);
+		}
 	}
 		
 	function applyCode ($html, &$vars) {
@@ -529,16 +532,20 @@ $debug = false;
 											$template = getVars($vars, $v[0]);
 											break;
 										case 'js':
-											if (isset ($v[0]) && $v[0]) $ret .= '<script src="/?page='.getVars ($vars, $v[0]).'&type=js"></script>';
-											 else $ret .= '<script src="/static/script.js"></script>';
+											if (isset ($v[0]) && $v[0]) $link = '/?page='.getVars ($vars, $v[0]).'&type=js';
+											 else $link = '/static/script.js';
+											if (!isset ($v[1]) || !$v[1]) $link = '<script src="'.$link.'"></script>';
+											$ret .= $link;
 											break;
 										case 'jsDefer':
 											if (isset ($v[0]) && $v[0]) $ret .= '<script src="/?page='.getVars ($vars, $v[0]).'&type=js" defer></script>';
 											 else $ret .= '<script src="/static/script.js" defer></script>';
 											break;
 										case 'css':
-											if (isset ($v[0]) && $v[0]) $ret .= '<link rel="stylesheet" href="/?page='.getVars($vars, $v[0]).'&type=css">';
-											 else $ret .= '<link rel="stylesheet" href="/static/style.css">';
+											if (isset ($v[0]) && $v[0]) $link = '/?page='.getVars($vars, $v[0]).'&type=css';
+											 else $link = '/static/style.css';
+											if (!isset ($v[1]) || !$v[1]) $link = '<link rel="stylesheet" href="'.$link.'">';
+											$ret .= $link;
 											break;
 										case 'cssDefer':
 											if (isset ($v[0]) && $v[0]) $ret .= '<script>LazyCss("/?page='.getVars($vars, $v[0]).'&type=css");</script>';
