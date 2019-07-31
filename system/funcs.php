@@ -247,7 +247,8 @@
 	}
 	
 	
-	function makeLink ($get, $set=[], $def=[]) {
+	function makeLink ($get, $set=[], $def=[], $uri=false) {
+		if ($uri ===  false) $uri = $_SERVER['REQUEST_URI'];
 		foreach ($set as $m => $n) $get[$m] = $n;
 		foreach ($def as $m => $n) if ($get[$m] == $n) unset ($get[$m]);
 		ksort ($get);
@@ -259,7 +260,7 @@
 			$comma = '&';
 		}
 		if (!$ret) {
-			$ret = $_SERVER['REQUEST_URI'];
+			$ret = $uri;
 			$a = mb_strpos ($ret, '?');
 			if ($a !== false) $ret = mb_substr($ret, 0, $a);
 		}
@@ -268,7 +269,7 @@
 	
 	function makeLinkFromUrl ($url, $set=[], $def=[]) {
 		$a = mb_strpos ($url, '?');
-		if ($a===false) return $url . makeLink ([], $set, $def);
+		if ($a===false) return $url . makeLink ([], $set, $def, '');
 		$uri = mb_substr($url, 0, $a);
 		$arrstr = mb_substr($url, $a+1);
 		preg_match_all ('/([^=&]+)(?:=([^&]+))/ui', $arrstr, $x);
@@ -278,7 +279,7 @@
 			if (isset ($x[2][$a])) $vl = $x[2][$a]; else $vl = '1';
 			$get[$x[1][$a]] = $vl;
 		}
-		return $uri . makeLink ($get, $set, $def);
+		return $uri . makeLink ($get, $set, $def, '');
 	}
 	
 	function CSRF_generate () {
@@ -412,7 +413,7 @@ $debug = false;
 								$foreachHID = getVars ($vars, $v[0]);
 								if (isset ($v[1])) $foreachLimit = getVars($vars, $v[1]); else $foreachLimit = false;
 								if (isset ($v[2])) $foreachSkip = getVars($vars, $v[2]); else $foreachSkip = 0;
-								if (isset ($v[3])) $foreachCond = getVars($vars, $v[3]); else $foreachCond = '1';
+								if (isset ($v[3])) $foreachCond = $v[3]; else $foreachCond = '1';
 								$foreachAsc = true;
 								$elem = $con->query("select * from {$pr}struct where hid='$foreachHID'")->fetch();
 								if ($elem) inCacheAdd ($elem['id']);
@@ -429,7 +430,7 @@ $debug = false;
 								$foreachHID = getVars ($vars, $v[0]);
 								if (isset ($v[1])) $foreachLimit = getVars($vars, $v[1]); else $foreachLimit = false;
 								if (isset ($v[2])) $foreachSkip = getVars($vars, $v[2]); else $foreachSkip = 0;
-								if (isset ($v[3])) $foreachCond = getVars($vars, $v[3]); else $foreachCond = '1';
+								if (isset ($v[3])) $foreachCond = $v[3]; else $foreachCond = '1';
 								$foreachAsc = false;
 								$elem = $con->query("select * from {$pr}struct where hid='$foreachHID'")->fetch();
 								if ($elem) inCacheAdd ($elem['id']);

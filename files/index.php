@@ -23,8 +23,10 @@
 	header('Content-Disposition: attachment; filename=' . preg_replace('/ /ui','_',$name));
 	//header('Content-Disposition: attachment; filename=' . basename($name));
 	header('Content-Transfer-Encoding: binary');
-	header('Expires: 0');
-	header('Cache-Control: must-revalidate');
+	//header('Expires: 0');
+	header("Expires: " . gmdate("D, d M Y H:i:s", time() + 365*60*60*24) . " GMT");
+	//header('Cache-Control: must-revalidate');
+	header('Cache-Control: public');
 	header('Pragma: public');
 	header('Content-Length: ' . filesize($file));
 	readfile($file);

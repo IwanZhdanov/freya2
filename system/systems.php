@@ -992,7 +992,7 @@
 					$caption = 'concat('.de_quotes ($caption, '\'"', ', ').')';
 				} else $caption = $p['caption_q'];
 				if ($p['field'] == 0) {
-					$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ, typ2, format, keep) values ('{$p['id']}', $caption, '{$p['vrname']}', '{$p['typ']}', '{$typ2}', {$p['format_q']}, '{$p['keep']}');");
+					$con->exec ("insert into {$pr}columns (groupid, caption, vrname, typ, typ2, format, keep, def) values ('{$p['id']}', $caption, '{$p['vrname']}', '{$p['typ']}', '{$typ2}', {$p['format_q']}, '{$p['keep']}', {$p['def_q']});");
 				} else
 				if ($p['keep'] == 'del') {
 					$con->exec ("delete from {$pr}columns where id='{$p['field']}';");
