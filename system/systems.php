@@ -117,7 +117,7 @@
 					['Логин','login','text'],
 					['Пароль','pass','pass'],
 				],
-				'submit'=>'?act=login',
+				'submit'=>'/user/?act=login',
 			];
 			if (isset ($p['back'])) {
 				$form['hidden']['back'] = $p['back'];
@@ -460,7 +460,7 @@
 					'fields'=>[
 						['Элемент','','info',$capt],
 						['Кому','for_type','select','opts'=>[0=>'Всем',1=>'Пользователю']],
-						['Логин','username','text','if'=>'for_type.value==1'],
+						['Логин','username','text','if'=>'for_type==1'],
 						['Права','grants','maskselect','opts'=>$opts],
 					],
 					'submit'=>'?act=struct_grants',
@@ -479,7 +479,7 @@
 					'fields'=>[
 						['Элемент','','info',$capt],
 						['Кому','for_type','select','opts'=>[0=>'Всем',1=>'Пользователю']],
-						['Логин','username','text','if'=>'for_type.value==1'],
+						['Логин','username','text','if'=>'for_type==1'],
 						['Права','grants','maskselect','opts'=>$opts],
 					],
 					'submit'=>'?act=struct_grants',
@@ -611,15 +611,27 @@
 					$check = $con->query("select * from {$pr}columns where groupid='{$p['id']}' and id='{$vr}';")->fetch();
 					if ($check) {
 						$con->exec("insert into {$pr}data (elem, var, value) values ('{$elem['id']}', '$vr', $vl);");
+						addVars ($vars, $check['vrname'], $p['dat'][$vr], []);
 					}
 				}
 				if ($check) {
 					$res = $con->query("select * from {$pr}columns where groupid='{$p['id']}' and def != '' order by sort;");
 					while ($row = $res->fetch()) {
 						$value = applyCode ($row['def'], $vars);
+						addVars ($vars, $row['vrname'], $value);
 						$con->exec("insert into {$pr}data (elem, var, value) values ('{$elem['id']}', '{$row['id']}', '$value');");
 					}
 					varsOnForm ($vars, true);
+				}
+				$ff = $con->query("select * from {$pr}columns where groupid='{$p['id']}' order by sort;");
+				while ($ffs = $ff->fetch()) {
+					if (isTrue($vars, $ffs['vrname'])) {
+						if (getVars ($vars, $ffs['vrname']) != $caption) {
+							$lastid = $con->query("select id from {$pr}struct order by -id limit 1;")->fetch()['id'];
+							$con->exec ("update {$pr}struct set caption = concat(".de_quotes(getVars($vars, $ffs['vrname'])).") where id = $lastid;");
+						}
+						break;
+					}
 				}
 				inCacheDel ($p['id']);
 				normal ($pr.'struct');
@@ -637,8 +649,17 @@
 			while ($row = $res->fetch()) {
 				if (!$row['def']) {
 					if ($row['typ'] == 'select') {
+						$Items = applyCode ($row['typ2'], $vars);
+						$selItemList = '';
+						preg_match_all ('/\d+/ui', $Items, $xx);
+						$xq = count ($xx[0]);
+						$comma = '';
+						for ($xa = 0; $xa < $xq; $xa++) {
+							$selItemList .= $comma . $xx[0][$xa];
+							$comma = ',';
+						}
 						$opts = [0=>''];
-						$optA = $con->query("select * from {$pr}struct where parent in (select id from {$pr}struct where hid='{$row['typ2']}');");
+						$optA = $con->query("select * from {$pr}struct where parent in (select id from {$pr}struct where hid in ($selItemList));");
 						while ($optB = $optA->fetch()) $opts[$optB['hid']] = $optB['caption'];
 						$fields[] = [$row['caption'], 'dat['.$row['id'].']', $row['typ'], 'format'=>$row['format'], 'opts'=>$opts];
 					} else
@@ -854,8 +875,10 @@
 		global $con, $data, $err;
 		if (!grantedForMe ($p['id'], EDIT_TABLE_DATA)) return;
 		$pr = $data['mysql']['pref'].'_';
-		$elem = $con->query("select * from {$pr}struct where id = '{$p['id']}';")->fetch();
+		if (!isset ($p['elem_id'])) $p['elem_id'] = $p['id'];
+		$elem = $con->query("select * from {$pr}struct where id = '{$p['id']}' or id = '{$p['elem_id']}';")->fetch();
 		if (!$elem) return;
+		$elid = $elem['id'];
 		if (!$mode) {
 			$mode = 'form';
 			if (isset ($p['act']) && $p['act'] == 'struct_edit_vars') $mode = 'do';
@@ -903,12 +926,12 @@
 						}
 						//$variable = $con->query("select * from {$pr}columns where id='{$vr}';")->fetch();
 						//if ($variable['caption'] == 'HTML' && $_POST['dat'][$vr]) $value = $_POST['dat'][$vr]; else $value = $vl;
-						$dat = $con->query("select * from {$pr}data where elem='{$p['id']}' and var='$vr';")->fetch();
+						$dat = $con->query("select * from {$pr}data where elem='$elid' and var='$vr';")->fetch();
 						if ($dat) $con->exec("update {$pr}data set value={$vl} where id='{$dat['id']}';"); else
-						 $con->exec ("insert into {$pr}data (elem, var, value) values ('{$p['id']}', '$vr', $vl);");
+						 $con->exec ("insert into {$pr}data (elem, var, value) values ('$elid', '$vr', $vl);");
 					}
 				}
-				inCacheDel ($p['id']);
+				inCacheDel ($elid);
 				normal ($pr.'data');
 				$ret = 'done';
 			}
@@ -916,34 +939,52 @@
 			$mode = 'form';
 		}
 		if ($mode == 'form' && !isset($p['act'])) {
+			////if (isset ($p['back']) && $p['back']) $back = $p['back']; else
+			 $back = '?act=struct_edit_vars';
 			$form = [
 				'caption'=>'Изменить данные',
 				'defaults'=>$p,
 				'hidden'=>['id'=>$p['id']],
 				'fields'=>[],
-				'submit'=>'?act=struct_edit_vars',
+				'submit'=>$back,
 			];
 			$res = $con->query("select * from {$pr}data where elem in (select id from {$pr}struct where parent in (select id from {$pr}struct where alias='multilang')) and var in (select id from {$pr}columns where vrname = 'lang') order by sort;");
 			$langs = [];
 			while ($row = $res->fetch()) $langs[] = $row['value'];
 			$res = $con->query("select * from {$pr}columns where groupid='{$elem['parent']}' order by  sort;");
 			while ($row = $res->fetch()) {
-				$dat = $con->query("select * from {$pr}data where elem='{$p['id']}' and var='{$row['id']}';")->fetch();
+				$dat = $con->query("select * from {$pr}data where elem='$elid' and var='{$row['id']}';")->fetch();
 				$value = $dat ? $dat['value'] : '';
 				if ($row['typ'] == 'select') {
+					$Items = applyCode ($row['typ2'], $vars);
+					$selItemList = '';
+					preg_match_all ('/\d+/ui', $Items, $xx);
+					$xq = count ($xx[0]);
+					$comma = '';
+					for ($xa = 0; $xa < $xq; $xa++) {
+						$selItemList .= $comma . $xx[0][$xa];
+						$comma = ',';
+					}
 					$opts = [0=>''];
-					$optA = $con->query("select * from {$pr}struct where parent in (select id from {$pr}struct where hid='{$row['typ2']}') order by sort;");
+					$optA = $con->query("select * from {$pr}struct where parent in (select id from {$pr}struct where hid in ($selItemList)) order by sort;");
 					while ($optB = $optA->fetch()) $opts[$optB['hid']] = $optB['caption'];
-					$form['fields'][] = [$row['caption'].' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value, 'opts'=>$opts];
+					$cpt = $row['caption'];
+					if (strpos($_SERVER['REQUEST_URI'],'/freya/') !== false) $cpt .= ' [ '.$row['vrname'].' ]';
+					$form['fields'][] = [$cpt, 'dat['.$row['id'].']', $row['typ'], $value, 'opts'=>$opts];
 				} else {
 					if ($langs == [] || !$row['typ2'] || $row['typ2'] >= 1050 || ($row['typ2'] & 1) == 0) {
-						$form['fields'][] = [getFormCaption($row['caption']).' [ '.$row['vrname'].' ]', 'dat['.$row['id'].']', $row['typ'], $value];
+						$cpt = getFormCaption($row['caption']);
+						if (strpos($_SERVER['REQUEST_URI'],'/freya/') !== false) $cpt .= ' [ '.$row['vrname'].' ]';
+						$form['fields'][] = [$cpt, 'dat['.$row['id'].']', $row['typ'], $value];
 					} else {
 						$thisvalue = $value;
 						foreach ($langs as $langId) {
 							preg_match ('/\{\{ set \('.$langId.', '.$langId.'\) if \((?:get\.)?lang = '.$langId.'\) \}\}((?:.|\r|\n)*?)\{\{ endif set \('.$langId.', '.$langId.'\) \}\}/ui', $value, $x);
 							if (isset ($x) && isset ($x[1])) $thisvalue = $x[1];
-							$form['fields'][] = [getFormCaption($row['caption']).' [ '.$row['vrname'].' ], '.$langId, 'dat['.$row['id'].']['.$langId.']', $row['typ'], $thisvalue];
+							$cpt = getFormCaption($row['caption']);
+							if (strpos($_SERVER['REQUEST_URI'],'/freya/') !== false) $cpt .= ' [ '.$row['vrname'].' ]';
+							$cpt .= ', '.$langId;
+							$form['fields'][] = [$cpt, 'dat['.$row['id'].']['.$langId.']', $row['typ'], $thisvalue];
 							$thisvalue = '';
 						}
 					}

@@ -657,13 +657,21 @@ $debug = false;
 												$ret .= makeLink ($_GET, $arr, ['p'=>0]);
 											}
 											break;
+										case 'substr':
+											addVars ($vars, $v[0], mb_substr (getVars($vars, $v[1]), getVars($vars, $v[2])-1, getVars($vars, $v[3])));
+											break;
+										case 'strpos':
+											$p = mb_strpos (getVars($vars, $v[1]), getVars($vars, $v[2]));
+											if ($p === false) addVars ($vars, $v[0], 0);
+											addVars ($vars, $v[0], $p+1);
+											break;
 										case 'sendEmail':
 											$hid = getVars ($vars, $v[0]);
 											$ml = $con->query("select * from {$pr}struct where hid='$hid';")->fetch();
 											if ($ml) $mailList[$ml['id']] = true;
 											break;
 										case 'formAdd':
-											$elem = $con->query("select * from {$pr}struct where hid='{$v[0]}';")->fetch();
+											$elem = $con->query("select * from {$pr}struct where hid='".getVars($vars,$v[0])."';")->fetch();
 											if ($elem) {
 												inCacheAdd ($elem['id']);
 												ob_start ();
@@ -679,6 +687,30 @@ $debug = false;
 												if ($tmp == 'err') $direct = makeLinkFromUrl($_SERVER['HTTP_REFERER'], ['rand'=>rand(10000,99999)]);
 												$ret .= ob_get_clean();
 											}
+											break;
+										case 'formEdit':
+											$elem = $con->query("select * from {$pr}struct where hid='".getVars($vars,$v[0])."';")->fetch();
+											if ($elem) {
+												inCacheAdd ($elem['id']);
+												ob_start();
+												$p = [];
+												if (isset ($session['lastform'])) $p = add_arr ($p, $session['lastform']);
+												$p = add_arr ($p, $input);
+												if (!isset($p['id'])) $p['id'] = $elem['id'];
+												$p['elem_id'] = $elem['id'];
+												$p['back'] = $_SERVER['REQUEST_URI'];
+												$tmp = sysShowVarStruct ($p, '', $vars);
+												if ($tmp == 'done') $direct = makeLinkFromUrl($_SERVER['HTTP_REFERER'], ['rand'=>0], ['rand'=>0]);
+												if ($tmp == 'err') $direct = makeLinkFromUrl($_SERVER['HTTP_REFERER'], ['rand'=>rand(10000,99999)]);
+												$ret .= ob_get_clean();
+											}
+											break;
+										case 'formLogin':
+											if (!isset ($session['user'])) {
+												ob_start ();
+												sysLogin([], '', $vars);
+												$ret .= ob_get_clean();
+											} else $ret .= '<a href="/user/logout.php">Выход</a>';
 											break;
 										default:
 											$ret .= applyCode (getVars ($vars, $y[1][$b]), $vars);
