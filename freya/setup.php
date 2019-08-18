@@ -6,6 +6,8 @@
 		// Корректировка базы данных
 		$q = $con->query("show columns from {$data['mysql']['pref']}_columns where Field = 'caption' and Type = 'char(100)';")->rowCount();
 		if ($q) $con->exec ("alter table {$data['mysql']['pref']}_columns change caption caption text;");
+		$q = $con->query("show columns from {$data['mysql']['pref']}_columns where Field = 'typ2' and Type = 'char(20)';")->rowCount();
+		if ($q) $con->exec ("alter table {$data['mysql']['pref']}_columns change typ2 typ2 text;");
 		$q = $con->query("show columns from {$data['mysql']['pref']}_struct where Field = 'lastmod';")->rowCount();
 		if (!$q) $con->exec ("alter table {$data['mysql']['pref']}_struct add lastmod int default 0;");
 		

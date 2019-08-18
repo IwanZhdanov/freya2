@@ -32,6 +32,22 @@
 		<? if (sysStructInfo ($input) == 'done') $direct = '?id='.$input['id'].'&tab=1'; ?>
 		<? sysGetStruct ($id, -1, 0); ?>
 		<? if (sysAddToStruct ($input) == 'done') $direct = '?id='.$input['id'].'&tab=1'; ?>
+		<p>
+		<?php if (grantedForMe($input['id'], 'VIEW_TABLE')) { ?><button type="button" onclick="location.href='export.php?id=<?=$input['id']?>';">Экспорт</button><?php } ?>
+		<?php if (grantedForMe ($elem['id'], 'INSERT_TO_TABLE')
+			&& grantedForMe ($elem['id'], 'EDIT_TABLE_DATA')
+			&& grantedForMe ($elem['id'], 'EDIT_COLUMN_LIST')) { 
+			$form = [
+				'caption'=>'Импорт компонента',
+				'fields'=>[
+					['Файл','fl','file'],
+				],
+				'submit'=>'import.php?id='.$elem['id'],
+				'spoiler'=>'Импорт',
+			];
+			echo makeForm ($form);
+			 } ?>
+		</p>
 	</div>
 	<div class="tab1 tab_dat elem2">
 		<? if (sysShowVarStruct ($input) == 'done') $direct = '?id='.$input['id'].'&tab=2'; ?>

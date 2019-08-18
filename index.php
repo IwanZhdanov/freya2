@@ -23,32 +23,8 @@
 		if ($row) $session['lang'] = $row['value']; else $session['lang'] = '';
 	}
 
-			if (!isset ($_POST) || $_POST==[]) {
-				$cache_hash = hash('SHA256', $_SERVER['HTTP_HOST'].' -> '.$_SERVER['REQUEST_URI'].' -> '.$session['lang']);
-				$cache_filename = $_SERVER['DOCUMENT_ROOT'].'/cache/'.$cache_hash.'.html';
-				if (is_file($cache_filename)) {
 
-					$LastModified_unix = filemtime($cache_filename);
-					$LastModified = gmdate("D, d M Y H:i:s \G\M\T", $LastModified_unix);
-					$IfModifiedSince = false;
-					if (isset($_ENV['HTTP_IF_MODIFIED_SINCE']))
-						$IfModifiedSince = strtotime(substr($_ENV['HTTP_IF_MODIFIED_SINCE'], 5));  
-					if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']))
-						$IfModifiedSince = strtotime(substr($_SERVER['HTTP_IF_MODIFIED_SINCE'], 5));
-					if ($IfModifiedSince && $IfModifiedSince >= $LastModified_unix) {
-						header($_SERVER['SERVER_PROTOCOL'] . ' 304 Not Modified');
-						exit;
-					}
-					header ("Content-type: text/html");
-					header ('Last-Modified: '. $LastModified);
-
-					$html = file_get_contents ($cache_filename);
-					echo $html;
-					die();
-				}
-			}
-		
-	preg_match_all ('/\/([^\/]+)/ui', $_SERVER['REQUEST_URI'], $x);
+	preg_match_all ('/\/([^?\/]+)/ui', $_SERVER['REQUEST_URI'], $x);
 	$links = [];
 	$row = $con->query("select * from {$data['mysql']['pref']}_data where elem in (select id from {$data['mysql']['pref']}_struct where parent in (select id from {$data['mysql']['pref']}_struct where alias='multilang')) and var in (select id from {$data['mysql']['pref']}_columns where vrname = 'lang') order by sort limit 0,1;")->fetch();
 	$links['lang'] = '';
@@ -93,21 +69,65 @@
 	$needCahce = false;
 	$vars = [];
 	$struct = isset ($input['page']) ? $input['page'] : 'index';
-	
+
+	addVars ($vars, 'space', ' ', []);
+	addVars ($vars, 'errmsg', 'Ошибка', []);
+	addVars ($vars, 'errmsg_csrf', 'Форма устарела. Повторите попытку.', []);
+	addVars ($vars, 'errmsg_lnk', 'Ссылки не разрешены', []);
+	addVars ($vars, 'okmsg', 'Отправлено', []);
+
 	if (isset ($session['msg'])) addVars ($vars, 'msg', $session['msg'], ['sys']); else addVars ($vars, 'msg', '', ['sys']);
 	if (isset ($session['err'])) addVars ($vars, 'err', $session['err'], ['sys']); else addVars ($vars, 'err', '', ['sys']);
+	if (isset ($session['user'])) {
+		$u = $con->query("select * from {$data['mysql']['pref']}_users where id={$session['user']};")->fetch();
+		addVars ($vars, 'id', $u['id'], ['user']);
+		addVars ($vars, 'login', $u['login'], ['user']);
+		addVars ($vars, 'email', $u['email'], ['user']);
+	} else {
+		addVars ($vars, 'id', 0, ['user']);
+		addVars ($vars, 'login', '', ['user']);
+		addVars ($vars, 'email', '', ['user']);
+	}
 	
-	//while (true) {
-		$elem = $con->query("select * from {$data['mysql']['pref']}_struct where alias='$struct' or hid='$struct';")->fetch();
-	//	if ($elem || $struct == 'index') break;
-	//	$struct = 'index';
-	//}
+	$elem = $con->query("select * from {$data['mysql']['pref']}_struct where alias='$struct' or hid='$struct';")->fetch();
+
+
+			if (!isset ($_POST) || $_POST==[]) {
+				$cache_hash = hash('SHA256', $_SERVER['HTTP_HOST'].' -> '.$_SERVER['REQUEST_URI'].' -> '.$session['lang'].' -> '.getGrantsForMe($elem['id']));
+				$cache_filename = $_SERVER['DOCUMENT_ROOT'].'/cache/'.$cache_hash.'.html';
+				if (is_file($cache_filename)) {
+
+					$LastModified_unix = filemtime($cache_filename);
+					$LastModified = gmdate("D, d M Y H:i:s \G\M\T", $LastModified_unix);
+					$IfModifiedSince = false;
+					if (isset($_ENV['HTTP_IF_MODIFIED_SINCE']))
+						$IfModifiedSince = strtotime(substr($_ENV['HTTP_IF_MODIFIED_SINCE'], 5));  
+					if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']))
+						$IfModifiedSince = strtotime(substr($_SERVER['HTTP_IF_MODIFIED_SINCE'], 5));
+					if ($IfModifiedSince && $IfModifiedSince >= $LastModified_unix) {
+						header($_SERVER['SERVER_PROTOCOL'] . ' 304 Not Modified');
+						exit;
+					}
+					header ("Content-type: text/html");
+					header ('Last-Modified: '. $LastModified);
+
+					$html = file_get_contents ($cache_filename);
+					echo $html;
+					die();
+				}
+			}
+		
+
+
 	addVars ($vars, 'lang', $session['lang'], ['page','get']);
 	if ($elem && grantedForMe($elem['id'], VIEW_PAGE)) {
 		$dat = $con->query("select * from {$data['mysql']['pref']}_data where elem='{$elem['id']}' and var in (select id from {$data['mysql']['pref']}_columns where caption='HTML');")->fetch();
 		if ($dat) {
 			$needCache = true;
-			if (is_array ($input)) foreach ($input as $vr => $vl) {
+			$inp = [];
+			$inp = add_arr ($inp, $_GET);
+			$inp = add_arr ($inp, $links);
+			if (is_array ($inp)) foreach ($inp as $vr => $vl) {
 				addVars ($vars, $vr, $vl, ['get']);
 			}
 			inCacheAdd ($elem['id']);
@@ -122,6 +142,12 @@
 			if ($dat && $dat['value']) {
 				header('Expires: '.date ('D, d M Y', time()+86400*365).' 00:00:00 GMT');
 				header ('Content-type: text/css');
+				$inp = [];
+				$inp = add_arr ($inp, $_GET);
+				$inp = add_arr ($inp, $links);
+				if (is_array ($inp)) foreach ($inp as $vr => $vl) {
+					addVars ($vars, $vr, $vl, ['get']);
+				}
 				echo applyCode ($dat['value'], $vars);
 				die();
 			}
@@ -129,6 +155,12 @@
 		if (!isset ($input['type']) || $input['type'] == 'js') {
 			$dat = $con->query("select * from {$data['mysql']['pref']}_data where elem='{$elem['id']}' and var in (select id from {$data['mysql']['pref']}_columns where caption='JS');")->fetch();
 			if ($dat && $dat['value']) {
+				$inp = [];
+				$inp = add_arr ($inp, $_GET);
+				$inp = add_arr ($inp, $links);
+				if (is_array ($inp)) foreach ($inp as $vr => $vl) {
+					addVars ($vars, $vr, $vl, ['get']);
+				}
 				header('Expires: '.date ('D, d M Y', time()+86400*365).' 00:00:00 GMT');
 				header ('Content-type: application/javascript');
 				echo applyCode ($dat['value'], $vars);
@@ -138,10 +170,6 @@
 	}
 	if ($session['msg']) addVars ($vars, 'msg', $session['msg'], ['sys']); else addVars ($vars, 'msg', '', ['sys']);
 	if ($session['err']) addVars ($vars, 'err', $session['err'], ['sys']); else addVars ($vars, 'err', '', ['sys']);
-	addVars ($vars, 'errmsg', 'Ошибка', []);
-	addVars ($vars, 'errmsg_csrf', 'Форма устарела. Повторите попытку.', []);
-	addVars ($vars, 'errmsg_lnk', 'Ссылки не разрешены', []);
-	addVars ($vars, 'okmsg', 'Отправлено', []);
 	$html_code = applyTemplates ($html_code, $vars);
 	$html_code = applyWiki ($html_code); 
 	
