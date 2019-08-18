@@ -703,9 +703,15 @@
 								$x['del'] = $row['id'];
 								sysDelFromStruct ($x);
 							}
+							$res = $con->query("select * from {$pr}files where elem='{$vr}';");
+							while ($row = $res->fetch()) {
+								unlinkAll ($_SERVER['DOCUMENT_ROOT'].'/files/', $row['path']);
+								$con->exec("delete from {$pr}files where id='{$row['id']}';");
+							}
 							$con->exec("delete from {$pr}data where elem='{$vr}';");
 							$con->exec("delete from {$pr}columns where groupid='{$vr}';");
 							$con->exec("delete from {$pr}struct where id='{$vr}';");
+							$con->exec("delete from {$pr}rights where basis='{$vr}';");
 							inCacheDel ($vr);
 						}
 					}
@@ -802,7 +808,7 @@
 					['Переместить','move_to','select', 'sql'=>"select id, concat('В ', caption) from {$pr}struct where parent='{$row['parent']}' and id != '{$row['id']}' order by sort;", 'opts'=>$up, 'if'=>'todo=="move"'],
 				],
 				'submit'=>'?act=struct_info',
-				'spoiler'=>'Настроить элемент',
+				//'spoiler'=>'Настроить элемент',
 			];
 			echo makeForm ($form);
 		}

@@ -555,7 +555,7 @@ $debug = false;
 										case 'include':
 											$hid = getVars ($vars, $v[0]);
 											$elem = $con->query("select * from {$pr}struct where hid='$hid'")->fetch();
-											$row = $con->query("select value from {$pr}data where elem = {$elem['id']} and var in (select id from {$pr}columns where caption='HTML');")->fetch();
+											$row = $con->query("select value from {$pr}data where elem = '{$elem['id']}' and var in (select id from {$pr}columns where caption='HTML');")->fetch();
 											if ($row) {
 												$ret .= applyCode ($row['value'], $vars);
 												inCacheAdd ($elem['id']);
