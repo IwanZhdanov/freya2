@@ -1,6 +1,6 @@
 <?php
 	session_start();
-	if (is_file ($_SERVER['DOCUMENT_ROOT'].'/settings.php')) require $_SERVER['DOCUMENT_ROOT'].'/settings.php';
+	if (is_file ($_SERVER['DOCUMENT_ROOT'].'/settings/settings.php')) require $_SERVER['DOCUMENT_ROOT'].'/settings/settings.php';
 	if (!isset ($data) && mb_substr($_SERVER['REQUEST_URI'],0,16) != '/freya/setup.php') {
 		header ('Location: /freya/setup.php');
 		die();
@@ -20,7 +20,7 @@
 		$user = [];
 	}
 	$title = 'Фрейя v2.0';
-	$cms_version = 'v 2.0.816';
+	$cms_version = 'v 2.0.819';
 	$direct = '';
 	$err = '';
 	$msg = '';

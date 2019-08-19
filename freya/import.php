@@ -6,9 +6,9 @@
 	$pr = $data['mysql']['pref'].'_';
 	$elem = $con->query("select * from {$pr}struct where id='$id';")->fetch();
 	if ($id && !$elem) $direct = 'index.php';
-	if (!grantedForMe ($elem['id'], 'INSERT_TO_TABLE')
-	|| !grantedForMe ($elem['id'], 'EDIT_TABLE_DATA')
-	|| !grantedForMe ($elem['id'], 'EDIT_COLUMN_LIST')) $direct = 'index.php';
+	if (!grantedForMe ($elem['id'], INSERT_TO_TABLE)
+	|| !grantedForMe ($elem['id'], EDIT_TABLE_DATA)
+	|| !grantedForMe ($elem['id'], EDIT_COLUMN_LIST)) $direct = 'index.php';
 	
 	function deq ($s) {
 		global $str;
@@ -76,15 +76,18 @@
 				}
 			}
 		}
-		foreach ($Arr['grants'] as $vr => $vl) {
-			$g = false;
-			if ($vl['uid'] == 'a') $g = 0;
-			if ($vl['uid'] && $vl['uid'][0] == 'u') {
-				$row2 = $con->query("select * from {$pr}users where login='".substr($vl['uid'],1)."';")->fetch();
-				if ($row2) $g = $row2['id'];
-			}
-			if ($g !== false) {
-				$con->exec ("insert into {$pr}rights (basis, uid, grants) values ('{$str[$vl['id']]['id']}', '$g', '{$vl['grants']}');");
+		if (grantedForMe ($elem['id'], CHANGE_GRANTS)) {
+			foreach ($Arr['grants'] as $vr => $vl) {
+				$g = false;
+				if ($vl['uid'] == 'a') $g = 0;
+				if ($vl['uid'] && $vl['uid'][0] == 'u') {
+					$row2 = $con->query("select * from {$pr}users where login='".substr($vl['uid'],1)."';")->fetch();
+					if ($row2 && $row2['id'] != $session['user']) $g = $row2['id'];
+				}
+				if ($g !== false) {
+					$qq = $con->query("select * from {$pr}rights where basis='{$str[$vl['id']]['id']}' and uid='$g' and grants='{$vl['grants']}';")->fetch();
+					if (!$qq) $con->exec ("insert into {$pr}rights (basis, uid, grants) values ('{$str[$vl['id']]['id']}', '$g', '{$vl['grants']}');");
+				}
 			}
 		}
 		normal ($pr.'struct');

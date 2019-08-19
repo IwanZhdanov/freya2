@@ -6,7 +6,7 @@
 	$pr = $data['mysql']['pref'].'_';
 	$elem = $con->query("select * from {$pr}struct where id='$id';")->fetch();
 	if ($id && !$elem) $direct = 'index.php';
-	if (!grantedForMe ($elem['id'], 'VIEW_TABLE')) $direct = 'index.php';
+	if (!grantedForMe ($elem['id'], VIEW_TABLE)) $direct = 'index.php';
 	
 	function checkEl ($id) {
 		global $con, $pr, $elemList, $elemCols, $elemData, $elemFiles, $elemGrants;
