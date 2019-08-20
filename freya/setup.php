@@ -1,7 +1,13 @@
 <?php
 	require $_SERVER['DOCUMENT_ROOT'].'/system/top.php';
+
+	if (!is_file ($_SERVER['DOCUMENT_ROOT'].'/settings/settings.php') && is_file ($_SERVER['DOCUMENT_ROOT'].'/settings.php')) {
+		copy ($_SERVER['DOCUMENT_ROOT'].'/settings.php', $_SERVER['DOCUMENT_ROOT'].'/settings/settings.php');
+		header ('Location: setup.php');
+		die();
+	}
 	
-	if (is_file ($_SERVER['DOCUMENT_ROOT'].'/settings.php')) require $_SERVER['DOCUMENT_ROOT'].'/settings.php';
+	if (is_file ($_SERVER['DOCUMENT_ROOT'].'/settings/settings.php')) require $_SERVER['DOCUMENT_ROOT'].'/settings/settings.php';
 	if (isset ($data)) {
 		// Корректировка базы данных
 		$q = $con->query("show columns from {$data['mysql']['pref']}_columns where Field = 'caption' and Type = 'char(100)';")->rowCount();
@@ -84,10 +90,10 @@
 			$c .= "\t\t\t'pref'=>'{$def['pref']}',\n";
 			$c .= "\t\t],\n";
 			$c .= "\t];\n";
-			$f = fopen ($_SERVER['DOCUMENT_ROOT'].'/settings.php', 'w');
+			$f = fopen ($_SERVER['DOCUMENT_ROOT'].'/settings/settings.php', 'w');
 			fwrite ($f, $c);
 			fclose ($f);
-			chmod ($_SERVER['DOCUMENT_ROOT'].'/settings.php', 0x644);
+			chmod ($_SERVER['DOCUMENT_ROOT'].'/settings/settings.php', 0x644);
 			header ("Location: /freya/");
 			die();
 		}
