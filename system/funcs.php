@@ -371,7 +371,7 @@
 	}
 		
 	function applyCode ($html, &$vars) {
-		global $session, $con, $data, $input, $direct, $mailList, $err, $msg;
+		global $session, $con, $data, $input, $direct, $directcode, $mailList, $err, $msg;
 		$pr = $data['mysql']['pref'].'_';
 $debug = false;
 		$html .= '{{}}';
@@ -711,6 +711,11 @@ $debug = false;
 												sysLogin([], '', $vars);
 												$ret .= ob_get_clean();
 											} else $ret .= '<a href="/user/logout.php">Выход</a>';
+											break;
+										case 'redirect':
+											$direct = getVars($vars,$v[0]);
+											$directcode = getVars($vars,$v[1]);
+											if (!$directcode) $directcode = 301;
 											break;
 										default:
 											$ret .= applyCode (getVars ($vars, $y[1][$b]), $vars);
