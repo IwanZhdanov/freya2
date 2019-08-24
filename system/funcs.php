@@ -250,7 +250,7 @@
 	function makeLink ($get, $set=[], $def=[], $uri=false) {
 		if ($uri ===  false) $uri = $_SERVER['REQUEST_URI'];
 		foreach ($set as $m => $n) $get[$m] = $n;
-		foreach ($def as $m => $n) if ($get[$m] == $n) unset ($get[$m]);
+		foreach ($def as $m => $n) if (isset ($get[$m]) && $get[$m] == $n) unset ($get[$m]);
 		ksort ($get);
 		$comma = '?';
 		$ret = '';
@@ -280,6 +280,45 @@
 			$get[$x[1][$a]] = $vl;
 		}
 		return $uri . makeLink ($get, $set, $def, '');
+	}
+	
+	function makeLinkCms ($vars, $val) {
+		$x = explode ('&', $val);
+		$arr = $_GET;
+		foreach ($x as $m => $n) {
+			$y = mb_strpos ($n, '=');
+			if ($y === false) {
+				if ($m == 0) $arr['page'] = $n; else
+				if ($m == 1) $arr['id'] = $n; else
+				$arr['par'.($m+1)] = $n;
+			} else {
+				$vrn = mb_substr($n,0,$y);
+				$arr[$vrn] = mb_substr($n,$y+1);
+			}
+		}
+		if (isset ($arr['page'])) $arr['par1'] = $arr['page'];
+		if (isset ($arr['id'])) $arr['par2'] = $arr['id'];
+		if (!isset ($arr['par1'])) $arr['par1'] = getVars($vars,'get.page');
+		if (!isset ($arr['par2']) && isTrue($vars, 'get.id')) $arr['par2'] = getVars($vars,'get.id');
+		unset ($arr['page']);
+		unset ($arr['id']);
+		$lnk = '';
+		if (isset ($arr['par1'])) $lnk .= '/';
+		for ($c = 1; $c < 100; $c++) {
+			if (!isset ($arr['par'.$c]) || !$arr['par'.$c]) break;
+			if ($c==1 && $arr['par1'] == 'index') {
+				unset ($arr['par1']);
+				break;
+			}
+			$lnk .= $arr['par'.$c] . '/';
+			unset ($arr['par'.$c]);
+		}
+		if (isset ($arr['par2'])) {
+			$arr['id'] = $arr['par2'];
+			unset ($arr['par2']);
+		}
+		$link = $lnk . makeLink ($_GET, $arr, ['id'=>0,'p'=>0], '');
+		return $link;
 	}
 	
 	function CSRF_generate () {
@@ -644,18 +683,11 @@ $debug = false;
 										case 'replace':
 											addVars ($vars, $v[0], preg_replace ('/'.$v[1].'/ui', $v[2], getVars($vars, $v[3])));
 											break;
-										case 'link':
-											$val = getVars ($vars, $v[0]);
-											if (strpos ($val, '/') !== false) $ret .= $val; else {
-												$x = explode ('&', $val);
-												$arr = [];
-												foreach ($x as $m => $n) {
-													$y = mb_strpos ($n, '=');
-													if ($y === false) $arr[$m] = $n; else
-													 $arr[mb_substr($n,0,$y)] = mb_substr($n,$y+1);
-												}
-												$ret .= makeLink ($_GET, $arr, ['p'=>0]);
-											}
+										case 'makeLink':
+											$var = getVars ($vars, $v[0]);
+											$val = getVars ($vars, $v[1]);
+											$lnk = makeLinkCms ($vars, $v[1]);
+											addVars ($vars, $v[0], $lnk);
 											break;
 										case 'substr':
 											addVars ($vars, $v[0], mb_substr (getVars($vars, $v[1]), getVars($vars, $v[2])-1, getVars($vars, $v[3])));
@@ -987,7 +1019,13 @@ $debug = false;
 		$ret = $vr;
 		preg_match_all ('/[0-9a-z._]+/ui',$vr,$x);
 		$q = count ($x[0]);
-		for ($a=0;$a<$q;$a++) if (isset ($vars[$x[0][$a]])) $ret = str_replace ($x[0][$a], $vars[$x[0][$a]], $ret);
+		for ($a=0;$a<$q;$a++) {
+			if ($x[0][$a] && $x[0][$a][0] == '.') {
+				$ret = str_replace ($x[0][$a], substr($x[0][$a], 1), $ret);
+			} else {
+				if (isset ($vars[$x[0][$a]])) $ret = str_replace ($x[0][$a], $vars[$x[0][$a]], $ret);
+			}
+		}
 		return $ret;
 	}
 	function addVars (&$vars, $vr, $vl, $arr = []) {
