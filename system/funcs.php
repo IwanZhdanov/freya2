@@ -318,6 +318,7 @@
 			unset ($arr['par2']);
 		}
 		$link = $lnk . makeLink ($_GET, $arr, ['id'=>0,'p'=>0], '');
+		if (mb_strpos ($link, '?') && (!$link || $link[strlen($link)-1]!='/')) $link .= '/';
 		return $link;
 	}
 	
@@ -417,6 +418,8 @@ $debug = false;
 		$ret = '';
 		$ifn = 0;
 		$template = '';
+		$loopLimit = 1000;
+		$loopLevel = 0;
 		$foreach = '';
 		$foreachHID = '';
 		$foreachAsc = true;
@@ -426,10 +429,12 @@ $debug = false;
 		preg_match_all ('/([\s\S]*?)\{\{([\s\S]*?)\}\}/ui', $html, $x);
 		$q = count ($x[0]);
 		for ($a=0;$a<$q;$a++) {
-			if ($foreachLevel == 0) {
-				if ($ifn == 0) $ret .= $x[1][$a];
-			} else {
+			if ($foreachLevel > 0) {
 				$foreach .= '}}' . $x[1][$a] . '{{';
+			} else if ($loopLevel > 0) {
+				$loopContent .= '}}' . $x[1][$a] . '{{';
+			} else {
+				if ($ifn == 0) $ret .= $x[1][$a];
 			}
 //			preg_match_all ('/([\w.]+) *(?:\((.*?)\))?/ui', $x[2][$a], $y);
 			preg_match_all ('/([\w.]+) *(?:\((.*?(?:\\))?)\))?/ui', $x[2][$a], $y);
@@ -446,8 +451,30 @@ $debug = false;
 					$vv[$c] = $tmp;
 				}
 				switch ($y[1][$b]) {
+					case 'loopStart':
+						if ($ifn == 0 && $foreachLevel == 0) {
+							if ($loopLevel == 0) {
+								if (isset ($v[0])) $loopLimit = getVars($vars, $v[0]); else $loopLimit = 1000;
+								$loopContent = '{{';
+							} else {
+								$foreach .= $y[0][$b] .'; ';
+							}
+							$loopLevel++;
+						}
+						break;
+					case 'endloop':
+						if ($ifn == 0 && $foreachLevel == 0) {
+							$loopLevel--;
+							if ($loopLevel == 0) {
+								$loopContent .= '}}';
+								for ($loop = 1; $loop <= $loopLimit; $loop++) {
+									$ret .= applyCode ($loopContent, $vars);
+								}
+							} else $loopContent .= ' endloop; ';
+						}
+						break;
 					case 'foreach':
-						if ($ifn == 0) {
+						if ($ifn == 0 && $loopLevel == 0) {
 							if ($foreachLevel == 0) {
 								$foreachHID = getVars ($vars, $v[0]);
 								if (isset ($v[1])) $foreachLimit = getVars($vars, $v[1]); else $foreachLimit = false;
@@ -464,7 +491,7 @@ $debug = false;
 						}
 						break;
 					case 'foreachDesc':
-						if ($ifn == 0) {
+						if ($ifn == 0 && $loopLevel == 0) {
 							if ($foreachLevel == 0) {
 								$foreachHID = getVars ($vars, $v[0]);
 								if (isset ($v[1])) $foreachLimit = getVars($vars, $v[1]); else $foreachLimit = false;
@@ -481,7 +508,7 @@ $debug = false;
 						}
 						break;
 					case 'endforeach':
-						if ($ifn == 0) {
+						if ($ifn == 0 && $loopLevel == 0) {
 							$foreachLevel--;
 							if ($foreachLevel == 0) {
 								$foreach .= '}}';
@@ -545,6 +572,8 @@ $debug = false;
 					default:
 						if ($foreachLevel > 0) {
 							$foreach .= $y[0][$b] . '; ';
+						} else if ($loopLevel > 0) {
+							$loopContent .= $y[0][$b] . '; ';
 						} else {
 							switch ($y[1][$b]) {
 								case 'if':
@@ -679,6 +708,38 @@ $debug = false;
 //													while ($i < 0) {
 //												}
 //											}
+											break;
+										case 'urlParse':
+											$cont = file_get_contents ($v[1]);
+											addVars ($vars, $v[0], $cont);
+											break;
+										case 'strSplit':
+											$vr = getVars ($vars, $v[0]);
+											$rt = getVars ($vars, $v[1]);
+											$reg = getVars ($vars, $v[2]);
+											preg_match_all ('/'.$reg.'/ui', $rt, $Sx);
+											$Sq = count ($Sx[0]);
+											addVars ($vars, $vr.'_q', $Sq);
+											for ($Sa=0;$Sa<$Sq;$Sa++) {
+												addVars ($vars, $vr.'_'.($Sa+1), $Sx[0][$Sa]);
+												$Sb = 0;
+												for ($loop=1;$loop<1000;$loop++) {
+													if (!isset($Sx[$loop][$Sa])) break;
+													addVars ($vars, $vr.'_'.($Sa+1).'_'.($loop+1), $Sx[$loop][$Sa]);
+												}
+											}
+											break;
+										case 'strGet':
+											$rt = $v[0];
+											$vr = getVars ($vars, $v[1]);
+											if (isset($v[2])) $rep = getVars ($vars, $v[2]); else $rep = 0;
+											if (isset($v[3])) $pos = getVars ($vars, $v[3]); else $pos = 0;
+											$out = '';
+											if (!$rep) $out = getVars($vars, $vr.'_q'); else {
+												if (!$pos) $out = getVars ($vars, $vr.'_'.$rep);
+												 else $out = getVars ($vars, $vr.'_'.$rep.'_'.$pos);
+											}
+											addVars ($vars, $rt, $out);
 											break;
 										case 'replace':
 											addVars ($vars, $v[0], preg_replace ('/'.$v[1].'/ui', $v[2], getVars($vars, $v[3])));
