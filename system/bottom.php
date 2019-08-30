@@ -5,7 +5,7 @@
 	if (isset ($data)) $_SESSION[$data['site']['id']] = $session;
 	if ($direct) {
 		$tmp = explode ('?', $direct);
-		if (!$tmp[0] || ($tmp[0][strlen($tmp[0])-1] != '/' && strpos($tmp[0], '.php') === false)) $tmp[0] .= '/';
+		if ($tmp[0] && $tmp[0][strlen($tmp[0])-1] != '/' && strpos($tmp[0], '.php') === false) $tmp[0] .= '/';
 		$direct = implode ('?', $tmp);
 		if ($directcode) {
 			if ($directcode == 301) header("HTTP/1.1 301 Moved Permanently"); else
