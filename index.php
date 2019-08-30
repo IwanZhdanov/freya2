@@ -69,6 +69,16 @@
 	$needCahce = false;
 	$vars = [];
 	$struct = isset ($input['page']) ? $input['page'] : 'index';
+	
+	$inc_link = $_SERVER['REQUEST_URI'];
+	$tmp = explode ('?', $inc_link);
+	if (!$tmp[0] || ($tmp[0][strlen($tmp[0])-1] != '/' && strpos($tmp[0], '.php') === false)) $tmp[0] .= '/';
+	$need_link = implode ('?', $tmp);
+	if ($inc_link != $need_link) {
+		$direct = $need_link;
+		require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';
+	}
+
 
 	addVars ($vars, 'space', ' ', []);
 	addVars ($vars, 'errmsg', 'Ошибка', []);

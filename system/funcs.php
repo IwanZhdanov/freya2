@@ -283,43 +283,55 @@
 	}
 	
 	function makeLinkCms ($vars, $val) {
-		$x = explode ('&', $val);
+		if (strpos ($val, '/') !== false) return $val;
 		$arr = $_GET;
-		foreach ($x as $m => $n) {
-			$y = mb_strpos ($n, '=');
-			if ($y === false) {
-				if ($m == 0) $arr['page'] = $n; else
-				if ($m == 1) $arr['id'] = $n; else
-				$arr['par'.($m+1)] = $n;
-			} else {
-				$vrn = mb_substr($n,0,$y);
-				$arr[$vrn] = mb_substr($n,$y+1);
-			}
+		$wasPar = 0;
+		for ($c=1;$c<100;$c++) {
+			if (!isTrue($vars, 'get.par'.$c)) break;
+			$arr['par'.$c] = getVars ($vars, 'get.par'.$c);
+			$wasPar = $c;
 		}
-		if (isset ($arr['page'])) $arr['par1'] = $arr['page'];
-		if (isset ($arr['id'])) $arr['par2'] = $arr['id'];
-		if (!isset ($arr['par1'])) $arr['par1'] = getVars($vars,'get.page');
-		if (!isset ($arr['par2']) && isTrue($vars, 'get.id')) $arr['par2'] = getVars($vars,'get.id');
-		unset ($arr['page']);
-		unset ($arr['id']);
-		$lnk = '';
-		if (isset ($arr['par1'])) $lnk .= '/';
-		for ($c = 1; $c < 100; $c++) {
-			if (!isset ($arr['par'.$c]) || !$arr['par'.$c]) break;
-			if ($c==1 && $arr['par1'] == 'index') {
-				unset ($arr['par1']);
-				break;
+		if (isTrue ($vars, 'get.page')) $arr['par1'] = getVars ($vars, 'get.page'); else $arr['par1'] = 'index';
+		if (isTrue ($vars, 'get.id')) $arr['par2'] = getVars ($vars, 'get.id');
+
+		$x = explode ('&', $val);
+		$maxPar = 0;
+		foreach ($x as $N => $vl) {
+			$y = mb_strpos ($vl, '=');
+			if ($y === false) {
+				$vrs = 'par'.($N+1);
+				$val = $vl;
+			} else {
+				$vrs = mb_substr($vl, 0, $y);
+				$val = mb_substr($vl, $y+1);
+				if ($vrs == 'page') $vrs = 'par1';
+				if ($vrs == 'id') $vrs = 'par2';
 			}
-			$lnk .= $arr['par'.$c] . '/';
+			$arr[$vrs] = $val;
+			if (mb_substr($vrs, 0, 3) == 'par') $maxPar = max(intval (mb_substr($vrs, 3)), $maxPar);
+		}
+		if ($maxPar == 0) $maxPar = $wasPar;
+		foreach ($arr as $vr => $vl) if (mb_substr($vr,0,3) == 'par' && intval(mb_substr($vr,3)) > $maxPar) unset ($arr[$vr]);
+		$lnk = '/';
+		for ($c=1;$c<=$maxPar;$c++) {
+			if (!isset ($arr['par'.$c])) break;
+			$vl = $arr['par'.$c];
 			unset ($arr['par'.$c]);
+			if ($c == 1 && $vl == 'index') break;
+			$lnk .= $vl . '/';
 		}
 		if (isset ($arr['par2'])) {
 			$arr['id'] = $arr['par2'];
 			unset ($arr['par2']);
 		}
-		$link = $lnk . makeLink ($_GET, $arr, ['id'=>0,'p'=>0], '');
-		if (mb_strpos ($link, '?') && (!$link || $link[strlen($link)-1]!='/')) $link .= '/';
-		return $link;
+		ksort ($arr);
+		$comma = '?';
+		foreach ($arr as $vr => $vl) {
+			$lnk .= $comma . $vr . '=' . $vl;
+			$comma = '&';
+		}
+		
+		return $lnk;
 	}
 	
 	function CSRF_generate () {
