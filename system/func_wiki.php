@@ -18,6 +18,7 @@
 	}
 
 	function applyWikiBlock ($txt) {
+		global $vars;
 		$open = [
 			'=2'=>['<div class="h1">','</div>', true],
 			'=3'=>['<div class="h3">','</div>', true],
@@ -53,7 +54,10 @@
 			} else {
 				$str .= ' ';
 				$oneline = (mb_strpos($str, '<') !== false);
-				$str = preg_replace ('/\[\[([^\]\|]*?)\|([^\]]*?)\]\]/ui','<a href="$1">$2</a>',$str);
+				//$str = preg_replace ('/\[\[([^\]\|]*?)\|([^\]]*?)\]\]/ui','<a href="$1">$2</a>',$str);
+				preg_match_all ('/\[\[([^\]\|]*?)\|([^\]]*?)\]\]/ui', $str, $lnklst);
+				$lnklstq = count($lnklst[0]);
+				for ($z=0;$z<$lnklstq;$z++) $str = str_replace ($lnklst[0][$z], '<a href="'.makeLinkCms($vars, $lnklst[1][$z]).'">'.$lnklst[2][$z].'</a>', $str);
 				$q = mb_strlen ($str);
 				$canTab = mb_substr($str, 0, 1) == '|';
 				for ($b=0;$b<$q;$b++) {

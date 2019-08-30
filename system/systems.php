@@ -15,7 +15,7 @@
 
 	function getGrantsForMe ($id) {
 		if (!$id) $id = 0;
-		global $rights, $user, $con, $data;
+		global $rights, $user, $con, $data, $session;
 		$prefix = $data['mysql']['pref'].'_';
 		$list = $id;
 		$ptr = intval ($id);
@@ -24,6 +24,7 @@
 			$list = intval($ptr) . ', ' . $list;
 		}
 		$groups = '0';
+		if (isset ($session['user'])) $groups .= ', -1';
 		if ($user) {
 			$groups = $user['id'] .', '. $groups;
 			/// добавить группы
@@ -355,7 +356,9 @@
 				$res2 = $con->query("select * from {$pr}rights where basis='{$row['id']}';");
 				while ($row2 = $res2->fetch()) {
 					$N++;
-					if ($row2['uid'] == 0) $to = '(всем)'; else {
+					if ($row2['uid'] == 0) $to = '(всем)'; else 
+					if ($row2['uid'] == -1) $to = '(авторизованным)'; else 
+					{
 						$u = $con->query("select * from {$pr}users where id='{$row2['uid']}';")->fetch();
 						$to = $u['login'];
 					}
@@ -409,7 +412,7 @@
 				if (!grantedForMe ($elid, CHANGE_GRANTS)) $err.='У Вас нет прав на редактирование прав доступа к указанному элементу<br />';
 			}
 			if (!$err) {
-				if ($p['for_type'] == 0) $uid = 0; else {
+				if ($p['for_type'] == 0 || $p['for_type'] == -1) $uid = $p['for_type']; else {
 					$u = $con->query("select * from {$pr}users where login='{$p['username']}';")->fetch();
 					if ($u) {
 						$uid = $u['id'];
@@ -459,7 +462,7 @@
 					'hidden'=>['id'=>$p['id'], 'grant'=>$p['grant']],
 					'fields'=>[
 						['Элемент','','info',$capt],
-						['Кому','for_type','select','opts'=>[0=>'Всем',1=>'Пользователю']],
+						['Кому','for_type','select','opts'=>[0=>'Всем',-1=>'Авторизованным',1=>'Пользователю']],
 						['Логин','username','text','if'=>'for_type==1'],
 						['Права','grants','maskselect','opts'=>$opts],
 					],
@@ -478,7 +481,7 @@
 					'hidden'=>['id'=>$p['id'], 'grant'=>$p['grant']],
 					'fields'=>[
 						['Элемент','','info',$capt],
-						['Кому','for_type','select','opts'=>[0=>'Всем',1=>'Пользователю']],
+						['Кому','for_type','select','opts'=>[0=>'Всем',-1=>'Авторизованным',1=>'Пользователю']],
 						['Логин','username','text','if'=>'for_type==1'],
 						['Права','grants','maskselect','opts'=>$opts],
 					],

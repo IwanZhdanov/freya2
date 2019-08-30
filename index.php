@@ -155,11 +155,23 @@
 		if (!isset ($input['type']) || $input['type'] == 'js') {
 			$dat = $con->query("select * from {$data['mysql']['pref']}_data where elem='{$elem['id']}' and var in (select id from {$data['mysql']['pref']}_columns where caption='JS');")->fetch();
 			if ($dat && $dat['value']) {
+				$comet = $con->query("select * from {$data['mysql']['pref']}_data where elem='{$elem['id']}' and var in (select id from {$data['mysql']['pref']}_columns where caption='COMET');")->fetch();
 				$inp = [];
 				$inp = add_arr ($inp, $_GET);
 				$inp = add_arr ($inp, $links);
 				if (is_array ($inp)) foreach ($inp as $vr => $vl) {
 					addVars ($vars, $vr, $vl, ['get']);
+				}
+				if ($comet) {
+					session_write_close ();
+					$cometLength = 600;
+					for ($cometLoop = 1; $cometLoop <= $cometLength; $cometLoop++) {
+						$cometResponse = applyCode ($comet['value'], $vars);
+						if (strpos ($cometResponse, 'YES')) break;
+						if ($cometLoop == $cometLength) die();
+						sleep (1);
+					}
+					session_start();
 				}
 				header('Expires: '.date ('D, d M Y', time()+86400*365).' 00:00:00 GMT');
 				header ('Content-type: application/javascript');

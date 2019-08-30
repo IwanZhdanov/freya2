@@ -4,6 +4,15 @@
 	$session['msg'] .= $msg;
 	if (isset ($data)) $_SESSION[$data['site']['id']] = $session;
 	if ($direct) {
+		if ($directcode) {
+			if ($directcode == 301) header("HTTP/1.1 301 Moved Permanently"); else
+			if ($directcode == 302) header("HTTP/1.1 302 Found"); else
+			if ($directcode == 303) header("HTTP/1.1 303 See Other"); else
+			if ($directcode == 304) header("HTTP/1.1 304 Not Modified"); else
+			if ($directcode == 305) header("HTTP/1.1 305 Use Proxy"); else
+			if ($directcode == 307) header("HTTP/1.1 307 Temporary Redirect"); else
+			header("HTTP/1.1 ".$directcode);
+		}
 		header ('Location: '.$direct);
 		die();
 	}
