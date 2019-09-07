@@ -938,6 +938,8 @@
 						$dat = $con->query("select * from {$pr}data where elem='$elid' and var='$vr';")->fetch();
 						if ($dat) $con->exec("update {$pr}data set value={$vl} where id='{$dat['id']}';"); else
 						 $con->exec ("insert into {$pr}data (elem, var, value) values ('$elid', '$vr', $vl);");
+						if (!$vl) {
+						}
 					}
 				}
 				inCacheDel ($elid);

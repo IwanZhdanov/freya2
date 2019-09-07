@@ -313,6 +313,8 @@
 		if ($maxPar == 0) $maxPar = $wasPar;
 		foreach ($arr as $vr => $vl) if (mb_substr($vr,0,3) == 'par' && intval(mb_substr($vr,3)) > $maxPar) unset ($arr[$vr]);
 		$lnk = '/';
+		if (isset ($arr['par1']) && !$arr['par1']) $arr['par1'] = 'index';
+		if (isset ($arr['par2']) && !$arr['par2']) unset ($arr['par2']);
 		for ($c=1;$c<=$maxPar;$c++) {
 			if (!isset ($arr['par'.$c])) break;
 			$vl = $arr['par'.$c];
@@ -988,7 +990,7 @@ $debug = false;
 	function clearColumns () {
 		global $con, $data;
 		$pr = $data['mysql']['pref'].'_';
-		$con->exec ("delete from {$pr}columns where id not in (select var from {$pr}data) and keep = 0;");
+		$con->exec ("delete from {$pr}columns where id not in (select var from {$pr}data) and (keep = 0 or keep is null);");
 	}
 	function isTrue ($vars, $vr) {
 		$v = countVars ($vars, $vr);

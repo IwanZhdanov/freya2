@@ -74,6 +74,7 @@
 	$tmp = explode ('?', $inc_link);
 	if (!$tmp[0] || ($tmp[0][strlen($tmp[0])-1] != '/' && strpos($tmp[0], '.php') === false)) $tmp[0] .= '/';
 	$need_link = implode ('?', $tmp);
+	$need_link = preg_replace ('/\/{2,}/ui', '/', $need_link);
 	if ($inc_link != $need_link) {
 		$direct = $need_link;
 		require $_SERVER['DOCUMENT_ROOT'].'/system/bottom.php';

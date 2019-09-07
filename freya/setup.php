@@ -93,7 +93,6 @@
 			$f = fopen ($_SERVER['DOCUMENT_ROOT'].'/settings/settings.php', 'w');
 			fwrite ($f, $c);
 			fclose ($f);
-			chmod ($_SERVER['DOCUMENT_ROOT'].'/settings/settings.php', 0x644);
 			header ("Location: /freya/");
 			die();
 		}
