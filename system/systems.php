@@ -899,8 +899,8 @@
 			$action = $con->query("select * from {$pr}struct where id='{$p['action']}';")->fetch();
 			if (!$action || !grantedForMe ($action['id'], VIEW_PAGE)) $err .= 'Действие не найдено<br />';
 			if (!$err) {
-				addVarsFrom ($vars, $id, ['load']);
 				addVarsFrom ($vars, $action['id'], ['action']);
+				addVarsFrom ($vars, $id, ['load']);
 				applyCode (getVars($vars, 'action.action'), $vars);
 				saveVarsFrom ($vars, $id);
 				$ret = 'done';
