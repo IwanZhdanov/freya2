@@ -741,7 +741,7 @@
 		if ($mode == 'do') {
 			$ret = 'err';
 			if (!$err) {
-				$con->exec("update {$pr}struct set caption='{$p['caption']}', alias='{$p['alias']}' where id='{$p['id']}';");
+				$con->exec("update {$pr}struct set caption='{$p['caption']}', alias='{$p['alias']}', acts='{$p['acts']}' where id='{$p['id']}';");
 				inCacheDel ($p['id']);
 				if ($p['todo'] == 'sort') {
 					$me = $con->query("select * from {$pr}struct where id='{$p['id']}';")->fetch();
@@ -783,6 +783,7 @@
 			$row = $con->query("select * from {$pr}struct where id='{$p['id']}';")->fetch();
 			$todo = [
 				''=>'(ничего)',
+				'actions'=>'Изменить список действий',
 				'sort'=>'Порядок сортировки',
 				'move'=>'Переместить',
 			];
@@ -806,7 +807,8 @@
 					['ID','','info', $row['hid']],
 					['Название элемента','caption','text', $row['caption']],
 					['Алиас','alias','text', $row['alias']],
-					['Действие','todo','select', 'opts'=>$todo],
+					['Выполнить','todo','select', 'opts'=>$todo],
+					['Действия<br />(&lt;алиас&gt;: &lt;надпись на кнопке&gt;,<br />по одному в строке)','acts','code',$row['acts'],  'if'=>'todo=="actions"'],
 					['Разместить','sort_pos','select', 'sql'=>"select id, case when sort < {$row['sort']} then concat('Вверх, перед ',caption) else concat ('Вниз, после ', caption) end from {$pr}struct where parent={$row['parent']} and id != {$p['id']} order by sort;", 'if'=>'todo=="sort"'],
 					['Переместить','move_to','select', 'sql'=>"select id, concat('В ', caption) from {$pr}struct where parent='{$row['parent']}' and id != '{$row['id']}' order by sort;", 'opts'=>$up, 'if'=>'todo=="move"'],
 				],
@@ -876,6 +878,47 @@
 				'spoiler'=>'Добавить поле',
 			];
 			echo makeForm ($form);
+		}
+		return $ret;
+	}
+	
+	function sysGetActBtns ($p, $mode = '') {
+		global $con, $data, $err;
+		$pr = $data['mysql']['pref'].'_';
+		$id = $p['id'];
+		if (!grantedForMe ($id, EDIT_TABLE_DATA)) return;
+		$elem = $con->query("select * from {$pr}struct where id='$id';")->fetch();
+		$par = $con->query("select * from {$pr}struct where id='{$elem['parent']}';")->fetch();
+		if (!$mode) {
+			$mode = 'form';
+			if (isset ($p['act']) && $p['act'] == 'struct_do_action') $mode = 'do';
+		}
+		$ret = 'form';
+		if ($mode == 'do') {
+			$ret = 'err';
+			$action = $con->query("select * from {$pr}struct where id='{$p['action']}';")->fetch();
+			if (!$action || !grantedForMe ($action['id'], VIEW_PAGE)) $err .= 'Действие не найдено<br />';
+			if (!$err) {
+				addVarsFrom ($vars, $id, ['load']);
+				addVarsFrom ($vars, $action['id'], ['action']);
+				applyCode (getVars($vars, 'action.action'), $vars);
+				saveVarsFrom ($vars, $id);
+				$ret = 'done';
+			}
+			$mode = 'form';
+		}
+		if ($mode == 'form' && !isset($p['act'])) {
+			$out = '';
+			$acts = $par['acts'];
+			preg_match_all ('/(.+?) *?: *?(.*)/ui', $acts, $x);
+			$q = count ($x[0]);
+			for ($a=0;$a<$q;$a++) {
+				$act = $con->query("select * from {$pr}struct where alias='{$x[1][$a]}';")->fetch();
+				if (!$act) continue;
+				if (!grantedForMe ($act['id'], VIEW_PAGE)) continue;
+				$out .= '<button onclick="location.href=\'?id='.$id.'&act=struct_do_action&action='.$act['id'].'\';">'.$x[2][$a].'</button> ';
+			}
+			echo $out;
 		}
 		return $ret;
 	}
@@ -950,7 +993,7 @@
 			$mode = 'form';
 		}
 		if ($mode == 'form' && !isset($p['act'])) {
-			////if (isset ($p['back']) && $p['back']) $back = $p['back']; else
+			//if (isset ($p['back']) && $p['back']) $back = $p['back']; else
 			 $back = '?act=struct_edit_vars';
 			$form = [
 				'caption'=>'Изменить данные',

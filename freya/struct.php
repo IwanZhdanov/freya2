@@ -50,6 +50,7 @@
 		</p>
 	</div>
 	<div class="tab1 tab_dat elem2">
+		<? if (sysGetActBtns ($input) == 'done') $direct = '?id='.$input['id'].'&tab=2'; ?>
 		<? if (sysShowVarStruct ($input) == 'done') $direct = '?id='.$input['id'].'&tab=2'; ?>
 		<? if ($id && sysAddVarToStruct ($input) == 'done') $direct = '?id='.$input['id'].'&tab=2'; ?>
 		<? if ($id) { if ($id && isset($input['similar'])) sysShowSimilarVars ($id); else echo '<button onclick="location.href=\'?id='.$input['id'].'&similar=yes\';">Добавить похожие поля</button>'; } ?>
