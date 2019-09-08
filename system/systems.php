@@ -110,7 +110,7 @@
 			}
 			$mode = 'form';
 		}
-		if ($mode == 'form' && !isset($p['act'])) {
+		if ($mode == 'form') {
 			$form = [
 				'caption'=>'Авторизация',
 				'defaults'=>$p,
@@ -160,7 +160,7 @@
 			}
 			$mode = 'form';
 		}
-		if ($mode == 'form' && !isset($p['act'])) {
+		if ($mode == 'form') {
 			$form = [
 				'caption'=>'Регистрация',
 				'defaults'=>$p,
@@ -204,7 +204,7 @@
 			}
 			$mode = 'form';
 		}
-		if ($mode == 'form' && !isset($p['act'])) {
+		if ($mode == 'form') {
 			$form = [
 				'caption'=>'Сменить пароль',
 				'defaults'=>$p,
