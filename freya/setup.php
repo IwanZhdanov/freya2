@@ -17,7 +17,7 @@
 		$q = $con->query("show columns from {$data['mysql']['pref']}_struct where Field = 'lastmod';")->rowCount();
 		if (!$q) $con->exec ("alter table {$data['mysql']['pref']}_struct add lastmod int default 0;");
 		$q = $con->query("show columns from {$data['mysql']['pref']}_struct where Field = 'acts';")->rowCount();
-		if (!$q) $con->exec ("alter table {$data['mysql']['pref']}_struct add alias text default '' after alias;");
+		if (!$q) $con->exec ("alter table {$data['mysql']['pref']}_struct add acts text default '' after alias;");
 		
 		// Запрет на переустановку
 		header ('Location: /freya/');
