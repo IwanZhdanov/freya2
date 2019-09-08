@@ -450,19 +450,38 @@ $debug = false;
 			} else {
 				if ($ifn == 0) $ret .= $x[1][$a];
 			}
-//			preg_match_all ('/([\w.]+) *(?:\((.*?)\))?/ui', $x[2][$a], $y);
-			preg_match_all ('/([\w.]+) *(?:\((.*?(?:\\))?)\))?/ui', $x[2][$a], $y);
+//			preg_match_all ('/([\w.]+) *(?:\((.*?(?:\\))?)\))?/ui', $x[2][$a], $y);
+			$fr_tmp = $x[2][$a];
+			$fr_code = '';
+			$fr_len = mb_strlen ($fr_tmp);
+			$fr_quote = '';
+			$fr_slash = false;
+			for ($fr_a=0;$fr_a<$fr_len;$fr_a++) {
+				$fr_ch = mb_substr ($fr_tmp, $fr_a, 1);
+				if ($fr_ch == '"' || $fr_ch == "'") {
+					if ($fr_quote == $fr_ch) $fr_quote = ''; else
+					 if ($fr_quote == '') $fr_quote = $fr_ch;
+				}
+				if ($fr_ch == ')' && !$fr_slash && $fr_quote) $fr_code .= "\\";
+				$fr_code .= $fr_ch;
+				$fr_slash = ($fr_ch == '\\');
+			}
+			preg_match_all ('/([\w.]+) *(?:\(((?:\\\\\)|.)*?)\))?/ui', $fr_code, $y);
 			$q1 = count ($y[0]);
 			for ($b=0;$b<$q1;$b++) {
-				$tmp = preg_replace ('/ *, */ui', ',', str_replace ('\)', ')', $y[2][$b]));
+				$tmp2 = str_replace ('\)', ')', $y[2][$b]);
+				$tmp = preg_replace ('/ *, */ui', ',', $tmp2);
 				$v = explode (',', $tmp);
+				$v_tmp = explode (',', $tmp2);
 				$q2 = count ($v);
 				$vv = [];
 				$tmp = '';
 				for ($c = $q2-1; $c>=0; $c--) {
 					if ($tmp) $tmp = ',' . $tmp;
-					$tmp = $v[$c].$tmp;
-					$vv[$c] = $tmp;
+					$tmp = $v_tmp[$c].$tmp;
+					$tmp2 = $tmp;
+					while ($tmp2 && $tmp2[0] == ' ') $tmp2 = substr ($tmp2, 1);
+					$vv[$c] = $tmp2;
 				}
 				switch ($y[1][$b]) {
 					case 'loopStart':
@@ -1060,7 +1079,7 @@ $debug = false;
 		stPush ($st, $res);
 	}
 	function countVars ($vars, $str) {
-		preg_match_all('/[a-z][a-z0-9._]*|[0-9][0-9.,]*|[^ 0-9a-z.,_]+/ui', $str, $r);
+		preg_match_all('/[a-z][a-z0-9._]*|[0-9][0-9.,]*|(["\'])[^"\']*?\1|[^ 0-9a-z.,_"\']+/ui', $str, $r);
 		$st1 = [0];
 		$st2 = [0];
 		foreach ($r[0] as $i) {
@@ -1070,6 +1089,9 @@ $debug = false;
 			} else
 			if (preg_match('/[0-9]/ui',$i[0])) {
 				stPush ($st1, $i);
+			} else
+			if (preg_match('/["\']/ui', $i[0])) {
+				stPush ($st1, mb_substr($i, 1, mb_strlen($i)-2));
 			} else
 			{
 				while (true) {
@@ -1092,6 +1114,10 @@ $debug = false;
 	}
 	function getVars ($vars, $vr) {
 		$ret = $vr;
+		if ($vr && ($vr[0] == '"' || $vr[0] == "'")) {
+			$ret = mb_substr ($vr, 1, mb_strlen($vr)-2);
+			return $ret;
+		}
 		preg_match_all ('/[0-9a-z._]+/ui',$vr,$x);
 		$q = count ($x[0]);
 		for ($a=0;$a<$q;$a++) {
