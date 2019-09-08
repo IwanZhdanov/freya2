@@ -83,10 +83,17 @@
 		checkEl ($elem['id']);
 		$Arr = ['elements'=>$elemList, 'columns'=>$elemCols, 'data'=>$elemData, 'grants'=>$elemGrants, 'files'=>$elemFiles];
 		$result = serialize($Arr);
+		
+		if ($id == 0) $filename = 'site_'.$_SERVER['HTTP_HOST']; else {
+			$filename = $elem['caption'];
+			$filename = preg_replace ('/([^A-Za-zА-Яа-я0-9])/ui', '_', $filename);
+			$filename = preg_replace ('/(^_+|(_)_+)/ui', '$2', $filename);
+		}
+		$filename .= '.frc';
 
 		header('Content-Description: File Transfer');
 		header('Content-Type: application/octet-stream');
-		header('Content-Disposition: attachment; filename='.$elem['caption'].'.frc');
+		header('Content-Disposition: attachment; filename='.$filename);
 		header('Content-Transfer-Encoding: binary');
 		header('Expires: 0');
 		header('Cache-Control: must-revalidate');
