@@ -495,6 +495,7 @@ $debug = false;
 							}
 							$loopLevel++;
 						}
+						if ($foreachLevel != 0) $foreach .= $y[0][$b] .'; ';
 						break;
 					case 'endloop':
 						if ($ifn == 0 && $foreachLevel == 0) {
@@ -506,6 +507,7 @@ $debug = false;
 								}
 							} else $loopContent .= ' endloop; ';
 						}
+						if ($foreachLevel != 0) $foreach .= $y[0][$b] .'; ';
 						break;
 					case 'foreach':
 						if ($ifn == 0 && $loopLevel == 0) {
@@ -523,6 +525,7 @@ $debug = false;
 							}
 							$foreachLevel++;
 						}
+						if ($loopLevel != 0) $loopContent .= $y[0][$b] .'; ';
 						break;
 					case 'foreachDesc':
 						if ($ifn == 0 && $loopLevel == 0) {
@@ -540,6 +543,7 @@ $debug = false;
 							}
 							$foreachLevel++;
 						}
+						if ($loopLevel != 0) $loopContent .= $y[0][$b] .'; ';
 						break;
 					case 'endforeach':
 						if ($ifn == 0 && $loopLevel == 0) {
@@ -602,6 +606,7 @@ $debug = false;
 								} else $limit = '';
 							} else $foreach .= ' endforeach; ';
 						}
+						if ($loopLevel != 0) $loopContent .= $y[0][$b] .'; ';
 						break;
 					default:
 						if ($foreachLevel > 0) {
