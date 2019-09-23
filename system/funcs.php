@@ -484,13 +484,14 @@ $debug = false;
 					$vv[$c] = $tmp2;
 				}
 				switch ($y[1][$b]) {
+					case 'loop':
 					case 'loopStart':
 						if ($ifn == 0 && $foreachLevel == 0) {
 							if ($loopLevel == 0) {
 								if (isset ($v[0])) $loopLimit = getVars($vars, $v[0]); else $loopLimit = 1000;
 								$loopContent = '{{';
 							} else {
-								$foreach .= $y[0][$b] .'; ';
+								$loopContent .= $y[0][$b] .'; ';
 							}
 							$loopLevel++;
 						}
