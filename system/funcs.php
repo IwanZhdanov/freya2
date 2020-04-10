@@ -728,6 +728,9 @@ $debug = false;
 											$varname = countVars ($vars, $vv[1]);
 											addVars ($vars, $v[0], countVars ($vars, $varname));
 											break;
+										case 'hash':
+											addVars ($vars, $v[0], hash(countVars ($vars, $v[1]), countVars ($vars, $v[2])));
+											break;
 										case 'time':
 											addVars ($vars, 'year', date('Y'));
 											addVars ($vars, 'month', date('m'));
