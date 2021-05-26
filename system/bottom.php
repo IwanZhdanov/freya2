@@ -58,7 +58,7 @@
 <link rel="shortcut icon" href="/static/favicon.png" type="image/png">
 </head>
 <body>
-<? echo $err; $session['err'] = ''; ?>
+<?php echo $err; $session['err'] = ''; ?>
 <?=$body?>
 </body>
 </html>

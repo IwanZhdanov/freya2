@@ -29,14 +29,14 @@
 </div>
 <div class="dat">
 	<div class="tab1 tab_dat elem1">
-		<? if (sysStructInfo ($input) == 'done') $direct = '?id='.$input['id'].'&tab=1'; ?>
-		<? sysGetStruct ($id, -1, 0); ?>
-		<? if (sysAddToStruct ($input) == 'done') $direct = '?id='.$input['id'].'&tab=1'; ?>
+		<?php if (sysStructInfo ($input) == 'done') $direct = '?id='.$input['id'].'&tab=1'; ?>
+		<?php sysGetStruct ($id, -1, 0); ?>
+		<?php if (sysAddToStruct ($input) == 'done') $direct = '?id='.$input['id'].'&tab=1'; ?>
 		<p>
 		<?php if (grantedForMe($input['id'], VIEW_TABLE)) { ?><button type="button" onclick="location.href='export.php?id=<?=$input['id']?>';">Экспорт</button><?php } ?>
-		<?php if (grantedForMe ($elem['id'], INSERT_TO_TABLE)
+		<?php if ($elem && grantedForMe ($elem['id'], INSERT_TO_TABLE)
 			&& grantedForMe ($elem['id'], EDIT_TABLE_DATA)
-			&& grantedForMe ($elem['id'], EDIT_COLUMN_LIST)) { 
+			&& grantedForMe ($elem['id'], EDIT_COLUMN_LIST)) {
 			$form = [
 				'caption'=>'Импорт компонента',
 				'fields'=>[
@@ -50,17 +50,17 @@
 		</p>
 	</div>
 	<div class="tab1 tab_dat elem2">
-		<? if (sysGetActBtns ($input) == 'done') $direct = '?id='.$input['id'].'&tab=2'; ?>
-		<? if (sysShowVarStruct ($input) == 'done') $direct = '?id='.$input['id'].'&tab=2'; ?>
-		<? if ($id && sysAddVarToStruct ($input) == 'done') $direct = '?id='.$input['id'].'&tab=2'; ?>
-		<? if ($id) { if ($id && isset($input['similar'])) sysShowSimilarVars ($id); else echo '<button onclick="location.href=\'?id='.$input['id'].'&similar=yes\';">Добавить похожие поля</button>'; } ?>
+		<?php if (sysGetActBtns ($input) == 'done') $direct = '?id='.$input['id'].'&tab=2'; ?>
+		<?php if (sysShowVarStruct ($input) == 'done') $direct = '?id='.$input['id'].'&tab=2'; ?>
+		<?php if ($id && sysAddVarToStruct ($input) == 'done') $direct = '?id='.$input['id'].'&tab=2'; ?>
+		<?php if ($id) { if ($id && isset($input['similar'])) sysShowSimilarVars ($id); else echo '<button onclick="location.href=\'?id='.$input['id'].'&similar=yes\';">Добавить похожие поля</button>'; } ?>
 	</div>
 	<div class="tab1 tab_dat elem3">
-	 <? if (sysShowStructFields ($input) == 'done') $direct = '?id='.$input['id'].'&tab=3'; ?>
+	 <?php if (sysShowStructFields ($input) == 'done') $direct = '?id='.$input['id'].'&tab=3'; ?>
 	</div>
 	<div class="tab1 tab_dat elem4">
-	 <? sysShowStructGrants ($input) ?>
-	 <? if (sysEditStructGrants ($input) == 'done') $direct = '?id='.$input['id'].'&tab=4'; ?>
+	 <?php sysShowStructGrants ($input) ?>
+	 <?php if (sysEditStructGrants ($input) == 'done') $direct = '?id='.$input['id'].'&tab=4'; ?>
 	</div>
 </div>
 <script>Tabs('tab1', '<?=$tab?>');</script>

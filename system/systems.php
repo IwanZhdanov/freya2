@@ -352,12 +352,18 @@
 			while (true) {
 				$row = $con->query("select * from {$pr}struct where id='$ptr';")->fetch();
 				if (!$row && $ptr) break;
-				if ($row) $capt = $row['caption']; else $capt = 'Корень';
-				$res2 = $con->query("select * from {$pr}rights where basis='{$row['id']}';");
+				if ($row) {
+					$capt = $row['caption'];
+					$basis = $row['id'];
+				} else {
+					$capt = 'Корень';
+					$basis = 0;
+				}
+				$res2 = $con->query("select * from {$pr}rights where basis='$basis';");
 				while ($row2 = $res2->fetch()) {
 					$N++;
-					if ($row2['uid'] == 0) $to = '(всем)'; else 
-					if ($row2['uid'] == -1) $to = '(авторизованным)'; else 
+					if ($row2['uid'] == 0) $to = '(всем)'; else
+					if ($row2['uid'] == -1) $to = '(авторизованным)'; else
 					{
 						$u = $con->query("select * from {$pr}users where id='{$row2['uid']}';")->fetch();
 						$to = $u['login'];
@@ -443,7 +449,7 @@
 			$gr = false;
 			if (isset($p['grant'])) {
 				$gr = $con->query("select * from {$pr}rights where id='{$p['grant']}';")->fetch();
-				if (!grantedForMe ($gr['basis'], CHANGE_GRANTS)) $gr = false;
+				if (!$gr || !grantedForMe ($gr['basis'], CHANGE_GRANTS)) $gr = false;
 			}
 			if ($gr) {
 				$capt = $con->query("select * from {$pr}struct where id='{$gr['basis']}';")->fetch()['caption'];
@@ -888,6 +894,7 @@
 		$id = $p['id'];
 		if (!grantedForMe ($id, EDIT_TABLE_DATA)) return;
 		$elem = $con->query("select * from {$pr}struct where id='$id';")->fetch();
+		if (!$elem) return;
 		$par = $con->query("select * from {$pr}struct where id='{$elem['parent']}';")->fetch();
 		if (!$mode) {
 			$mode = 'form';
@@ -907,7 +914,7 @@
 			}
 			$mode = 'form';
 		}
-		if ($mode == 'form' && !isset($p['act'])) {
+		if ($mode == 'form' && !isset($p['act']) && $par) {
 			$out = '';
 			$acts = $par['acts'];
 			preg_match_all ('/(.+?) *?: *?(.*)/ui', $acts, $x);

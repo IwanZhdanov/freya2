@@ -19,8 +19,8 @@
 	} else {
 		$user = [];
 	}
-	$title = 'Фрейя v2.0';
-	$cms_version = 'v 2.0.922';
+	$title = 'Фрейя v2.1';
+	$cms_version = 'v 2.1.526';
 	$direct = '';
 	$directcode = 302;
 	$err = '';
